@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-ink-700;
+  }
+
+  body {
+    @apply bg-ink-950 text-ink-100 font-sans antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  ::selection {
+    @apply bg-brand-500/30 text-white;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-ink-600 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-ink-500;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-ink-900/50 backdrop-blur-md border border-ink-700;
+  }
+
+  .glass-hover {
+    @apply transition-all duration-200 hover:border-ink-600 hover:bg-ink-800/50;
+  }
+
+  .card-surface {
+    @apply bg-ink-850/80 border border-ink-700 rounded-xl backdrop-blur-sm;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-white via-ink-50 to-ink-200 bg-clip-text text-transparent;
+  }
+
+  .grid-bg {
+    background-image:
+      linear-gradient(to right, rgba(63, 63, 70, 0.15) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(63, 63, 70, 0.15) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  .glow-brand {
+    box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.1), 0 0 40px -10px rgba(99, 102, 241, 0.3);
+  }
+
+  .shimmer-bg {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.04), transparent);
+    background-size: 200% 100%;
+  }
+}
