@@ -5,6 +5,7 @@ export interface ClaimHandleRequest {
   handle: string;
   address: string;
   chain: string;
+  signature: string;
 }
 
 export interface ClaimHandleResponse {

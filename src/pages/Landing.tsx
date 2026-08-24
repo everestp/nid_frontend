@@ -19,8 +19,6 @@ import {
 import { Logo } from '@/components/Logo';
 import { useAuth } from '@/context/AuthContext';
 import { handleApi } from '@/api/hadleApi';
-// Assuming your API client is imported here. Adjust the path to match your project structure.
-
 
 export function Landing() {
   const navigate = useNavigate();
@@ -36,7 +34,7 @@ export function Landing() {
     navigate('/dashboard');
   };
 
-  // Handle live claim API interaction
+  // Handle live wallet sign & claim API interaction
   const handleClaimSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!handleInput.trim()) return;
@@ -45,20 +43,61 @@ export function Landing() {
     setError(null);
 
     try {
-      // Clean up the handle input (remove leading @ if user typed it)
       const cleanHandle = handleInput.trim().replace(/^@/, '').toLowerCase();
 
-      // Make API call to your backend /api/v1/handles/claim endpoint
-      // Adjust payload fields (e.g., address, chain) as required by your application setup
+      // 1. Detect wallet provider (Phantom for Solana or EVM like MetaMask)
+      const provider = (window as any).solana || (window as any).ethereum;
+      if (!provider) {
+        throw new Error('No crypto wallet found! Please install Phantom or MetaMask.');
+      }
+
+      let address = '';
+      let chain = 'ethereum';
+
+      if ((window as any).solana && provider.isPhantom) {
+        const resp = await provider.connect();
+        address = resp.publicKey.toString();
+        chain = 'solana';
+      } else {
+        const accounts = await provider.request({ method: 'eth_requestAccounts' });
+        address = accounts[0];
+        chain = 'evm'; // Matches backend expectation ('evm' or 'ethereum')
+      }
+
+      // 2. Exact message matched with backend expectation: fmt.Sprintf("Claim %s.nid", name)
+      const message = `Claim ${cleanHandle}.nid`;
+
+      // 3. Request wallet signature
+      let signature = '';
+      if (chain === 'solana') {
+        const encodedMessage = new TextEncoder().encode(message);
+        const signed = await provider.signMessage(encodedMessage, 'utf8');
+        // Handle Solana signature formatting reliably
+        const sigBytes = signed.signature || signed;
+        signature = btoa(String.fromCharCode(...sigBytes));
+      } else {
+        signature = await provider.request({
+          method: 'personal_sign',
+          params: [message, address],
+        });
+      }
+
+      console.log('This is the signature', signature);
+
+      // 4. Make API call matching your backend's ClaimHandleRequest structure
       const response = await handleApi.claimHandle({
-        handle: cleanHandle,
-        address: '0x0000000000000000000000000000000000000000', // Or collect real wallet address
-        chain: 'ethereum',
+        handle: cleanHandle,  // Backend expects 'name', not 'handle'
+        address: address,
+        chain: chain,       // 'evm' or 'solana'
+        message: message,   // Required for backend verification
+        signature: signature,
       });
 
-      if (response) {
-        navigate('/dashboard');
+      if (response && (response as any).token) {
+        localStorage.setItem('nid_token', (response as any).token);
       }
+
+      navigate('/dashboard');
     } catch (err: any) {
       setError(err?.message || 'Failed to claim handle. It may already be taken.');
     } finally {
@@ -200,7 +239,7 @@ export function Landing() {
                     {loading ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Claiming Handle...
+                        Connecting Wallet & Claiming...
                       </>
                     ) : (
                       <>
