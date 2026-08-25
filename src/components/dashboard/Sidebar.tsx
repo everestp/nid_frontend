@@ -27,19 +27,20 @@ const navSections = [
     { to: '/dashboard/sessions', label: 'OAuth Sessions', icon: KeyRound },
   ]},
   { label: 'Identity', items: [
-    { to: '/dashboard/sdk', label: 'SDK & Apps', icon: Code2 },
-    { to: '/dashboard/passkeys', label: 'Passkeys & Credentials', icon: Fingerprint },
-    { to: '/dashboard/privacy', label: 'Privacy Policies', icon: ShieldCheck },
-    { to: '/dashboard/payment-routing', label: 'Payment Routing', icon: ArrowRightLeft },
+
+    // { to: '/dashboard/passkeys', label: 'Passkeys & Credentials', icon: Fingerprint },
+    // { to: '/dashboard/privacy', label: 'Privacy Policies', icon: ShieldCheck },
+    // { to: '/dashboard/payment-routing', label: 'Payment Routing', icon: ArrowRightLeft },
     { to: '/dashboard/social-directory', label: 'Social Directory', icon: Users },
   ]},
-  { label: 'Insights', items: [
-    { to: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
-    { to: '/dashboard/security', label: 'Security Center', icon: ShieldCheck },
-    { to: '/dashboard/activity', label: 'Activity Log', icon: Activity },
-  ]},
+  // { label: 'Insights', items: [
+  //   { to: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
+  //   { to: '/dashboard/security', label: 'Security Center', icon: ShieldCheck },
+  //   // { to: '/dashboard/activity', label: 'Activity Log', icon: Activity },
+  // ]},
   { label: 'Account', items: [
     { to: '/dashboard/developers', label: 'Developers', icon: Code2 },
+    { to: '/dashboard/sdk', label: 'SDK & Apps', icon: Code2 },
     { to: '/dashboard/settings', label: 'Settings', icon: Settings },
   ]},
 ];

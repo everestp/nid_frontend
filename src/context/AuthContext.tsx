@@ -1,57 +1,198 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
-import { DEMO_USER, DEMO_CREDENTIALS } from '@/data/mockData';
+
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  type ReactNode,
+} from 'react';
+
+import { apiClient } from '@/api/apiClient';
+import { userProfileApi } from '@/api/userProfileApi';
+
+// ============================================================
+// TYPES
+// ============================================================
+
+export interface User {
+  id: string;
+  email?: string;
+  username?: string;
+  created_at?: string;
+}
+
+interface LoginResponse {
+  user: User;
+}
 
 interface AuthState {
   isAuthenticated: boolean;
-  user: typeof DEMO_USER | null;
-  login: (email: string, password: string) => boolean;
-  demoLogin: () => void;
-  logout: () => void;
+  user: User | null;
+  loading: boolean;
+
+  login: (
+    email: string,
+    password: string
+  ) => Promise<void>;
+
+  logout: () => Promise<void>;
+
+  refreshUser: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthState | undefined>(undefined);
+// ============================================================
+// AUTH CONTEXT
+// ============================================================
 
-const STORAGE_KEY = 'nid_demo_auth';
+const AuthContext =
+  createContext<AuthState | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return localStorage.getItem(STORAGE_KEY) === 'true';
-  });
-  const [user, setUser] = useState<typeof DEMO_USER | null>(() => {
-    return localStorage.getItem(STORAGE_KEY) === 'true' ? DEMO_USER : null;
-  });
+// ============================================================
+// AUTH PROVIDER
+// ============================================================
 
-  const login = useCallback((email: string, password: string) => {
-    if (email === DEMO_CREDENTIALS.email && password === DEMO_CREDENTIALS.password) {
-      setIsAuthenticated(true);
-      setUser(DEMO_USER);
-      localStorage.setItem(STORAGE_KEY, 'true');
-      return true;
+export function AuthProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const [user, setUser] =
+    useState<User | null>(null);
+
+  const [loading, setLoading] =
+    useState<boolean>(true);
+
+  // ==========================================================
+  // REFRESH CURRENT USER
+  // ==========================================================
+  //
+  // The backend reads the nid_token HttpOnly cookie.
+  //
+  // Frontend does NOT read or store the token.
+  //
+  // ==========================================================
+
+  const refreshUser = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      const response =
+        await userProfileApi.getCurrentUser();
+
+      setUser(response);
+    } catch (error) {
+      console.error(
+        'Authentication check failed:',
+        error
+      );
+
+      setUser(null);
+    } finally {
+      setLoading(false);
     }
-    return false;
   }, []);
 
-  const demoLogin = useCallback(() => {
-    setIsAuthenticated(true);
-    setUser(DEMO_USER);
-    localStorage.setItem(STORAGE_KEY, 'true');
-  }, []);
+  // ==========================================================
+  // EMAIL / PASSWORD LOGIN
+  // ==========================================================
 
-  const logout = useCallback(() => {
-    setIsAuthenticated(false);
-    setUser(null);
-    localStorage.removeItem(STORAGE_KEY);
-  }, []);
+  const login = useCallback(
+    async (
+      email: string,
+      password: string
+    ): Promise<void> => {
+      const response =
+        await apiClient.post<LoginResponse>(
+          '/auth/login',
+          {
+            email,
+            password,
+          }
+        );
+
+      setUser(response.user);
+    },
+    []
+  );
+
+  // ==========================================================
+  // LOGOUT
+  // ==========================================================
+
+  const logout = useCallback(
+    async (): Promise<void> => {
+      try {
+        await apiClient.post('/auth/logout');
+      } catch (error) {
+        console.error(
+          'Logout failed:',
+          error
+        );
+      } finally {
+        setUser(null);
+      }
+    },
+    []
+  );
+
+  // ==========================================================
+  // INITIAL AUTH CHECK
+  // ==========================================================
+  //
+  // Runs once when AuthProvider mounts.
+  //
+  // If nid_token exists and is valid:
+  //
+  //     user -> authenticated
+  //
+  // Otherwise:
+  //
+  //     user -> null
+  //
+  // ==========================================================
+
+  useEffect(() => {
+    refreshUser();
+  }, [refreshUser]);
+
+  // ==========================================================
+  // CONTEXT VALUE
+  // ==========================================================
+
+  const value: AuthState = {
+    isAuthenticated: user !== null,
+    user,
+    loading,
+    login,
+    logout,
+    refreshUser,
+  };
+
+  // ==========================================================
+  // PROVIDER
+  // ==========================================================
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, demoLogin, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
+// ============================================================
+// USE AUTH HOOK
+// ============================================================
+
+export function useAuth(): AuthState {
+  const context =
+    useContext(AuthContext);
+
+  if (!context) {
+    throw new Error(
+      'useAuth must be used within AuthProvider'
+    );
+  }
+
+  return context;
 }

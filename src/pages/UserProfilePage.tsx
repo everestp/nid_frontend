@@ -764,7 +764,7 @@ export default function UserProfilePage({
     handle;
 
   const secondary =
-    profile.handles.filter(
+    profile.handles?.filter(
       (h) =>
         h.handle.toLowerCase() !==
         primary.toLowerCase()
@@ -778,9 +778,9 @@ export default function UserProfilePage({
   });
 
   const verifiedCount =
-    profile.identities.filter(
+    profile.identities?.filter(
       (i) => i.verified
-    ).length;
+    )?.length;
 
   /* =========================
      UI
@@ -876,8 +876,8 @@ export default function UserProfilePage({
                 <div className="glass px-3 py-1.5 rounded-full text-[11px] font-medium text-ink-300 flex items-center gap-1.5 border border-ink-700/50">
                   <span className="h-1.5 w-1.5 rounded-full bg-brand-500 animate-pulse" />
 
-                  {profile.identities.length}{" "}
-                  {profile.identities.length ===
+                  {profile.identities?.length}{" "}
+                  {profile.identities?.length ===
                     1
                     ? "identity"
                     : "identities"}
@@ -913,7 +913,7 @@ export default function UserProfilePage({
                   </p>
 
                   <div className="flex flex-wrap justify-center gap-2">
-                    {secondary.map((h) => (
+                    {secondary?.map((h) => (
                       <a
                         key={h.handle}
                         href={`/@${h.handle}`}
@@ -947,7 +947,7 @@ export default function UserProfilePage({
           <div className="min-w-0 space-y-9">
             {/* IDENTITIES */}
 
-            {profile.identities.length > 0 && (
+            {profile.identities?.length > 0 && (
               <Reveal
                 show={mounted}
                 delay={80}
@@ -961,7 +961,7 @@ export default function UserProfilePage({
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {profile.identities.map(
+                  {profile.identities?.map(
                     (item, i) => {
                       const key =
                         item.platform.toLowerCase();
@@ -1084,7 +1084,7 @@ export default function UserProfilePage({
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {profile.wallets.map(
+                  {profile.wallets?.map(
                     (w, i) => (
                       <div
                         key={`${w.chain}-${w.address}-${i}`}
@@ -1139,8 +1139,8 @@ export default function UserProfilePage({
 
             {/* EMPTY */}
 
-            {profile.identities.length === 0 &&
-              profile.wallets.length === 0 && (
+            {profile.identities?.length === 0 &&
+              profile.wallets?.length === 0 && (
                 <div className="card-surface text-center py-16 rounded-2xl border border-ink-800/60">
                   <p className="text-ink-500 text-sm">
                     No public identities or wallets

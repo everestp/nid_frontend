@@ -18,7 +18,7 @@ import { authApi } from '@/api/authApi';
 export function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { demoLogin } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   const [handle, setHandle] = useState('');
   const [error, setError] = useState('');
@@ -57,7 +57,7 @@ export function Login() {
   // ============================================================
   // WALLET LOGIN
   // ============================================================
-
+const {refreshUser} = useAuth()
   const handleWalletSignIn = async (
     e: React.FormEvent
   ) => {
@@ -167,20 +167,6 @@ export function Login() {
       // 6. IN-HOUSE AUTHENTICATION
       // ==========================================================
 
-      /*
-       * This endpoint is ONLY for NID's own application.
-       *
-       * Backend:
-       *
-       * wallet signature
-       *       ↓
-       * AuthenticateInHouse()
-       *       ↓
-       * internal session token
-       *       ↓
-       * nid_token HttpOnly cookie
-       */
-
       const response =
         await authApi.walletLogin({
           handle: cleanHandle,
@@ -196,39 +182,20 @@ export function Login() {
         );
       }
 
-      /*
-       * IMPORTANT:
-       *
-       * Backend should already set:
-       *
-       * Set-Cookie: nid_token=...
-       *
-       * Because your apiClient uses:
-       *
-       * credentials: 'include'
-       *
-       * We don't need localStorage for the session.
-       */
+      // ==========================================================
+      // 6.1 UPDATE AUTH CONTEXT
+      // ==========================================================
+
+      // Backend has already set nid_token HttpOnly cookie.
+      // Refresh AuthContext so user/isAuthenticated are updated.
+
+      await refreshUser();
 
       // ==========================================================
       // 7. OIDC FLOW
       // ==========================================================
 
       if (isOAuthLogin) {
-        /*
-         * We have successfully authenticated the user
-         * with NID.
-         *
-         * Now continue the OAuth authorization request.
-         *
-         * IMPORTANT:
-         *
-         * Do NOT generate/store the OIDC ID token here.
-         *
-         * Backend's /oauth/authorize endpoint handles
-         * authorization-code generation.
-         */
-
         if (!oauthParams.client_id) {
           throw new Error(
             'OAuth client_id is missing.'
@@ -294,13 +261,7 @@ export function Login() {
           );
         }
 
-        /*
-         * Browser navigates to NID's authorization
-         * endpoint.
-         *
-         * Backend sees nid_token cookie and knows
-         * which NID user is authenticated.
-         */
+        // Backend sees nid_token cookie and continues OAuth.
 
         window.location.href =
           `/oauth/authorize?${params.toString()}`;
@@ -313,6 +274,7 @@ export function Login() {
       // ==========================================================
 
       navigate('/dashboard');
+
     } catch (err: any) {
       console.error(
         'Wallet login failed:',
@@ -332,49 +294,6 @@ export function Login() {
   // DEMO LOGIN
   // ============================================================
 
-  const handleDemo = async () => {
-    if (isOAuthLogin) {
-      setError(
-        'Demo login cannot be used for Sign in with NID.'
-      );
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      const response =
-        await authApi.demoLogin();
-
-      if (!response?.token) {
-        throw new Error(
-          'Demo authentication failed.'
-        );
-      }
-
-      /*
-       * Demo session should also be set by backend
-       * as an HttpOnly cookie.
-       */
-
-      demoLogin();
-
-      navigate('/dashboard');
-    } catch (err: any) {
-      console.error(
-        'Demo login failed:',
-        err
-      );
-
-      setError(
-        err?.message ||
-        'Demo login failed.'
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // ============================================================
   // UI
@@ -560,34 +479,6 @@ export function Login() {
           </form>
 
           {/* Demo Login */}
-
-          {!isOAuthLogin && (
-            <>
-              <div className="my-6 flex items-center gap-3">
-
-                <div className="flex-1 h-px bg-ink-700" />
-
-                <span className="text-xs text-ink-400">
-                  or
-                </span>
-
-                <div className="flex-1 h-px bg-ink-700" />
-
-              </div>
-
-              <button
-                onClick={handleDemo}
-                disabled={loading}
-                className="w-full inline-flex items-center justify-center gap-2 border border-ink-600 hover:border-ink-500 hover:bg-ink-800 text-ink-100 font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50"
-              >
-
-                <Zap className="w-4 h-4 text-warning-400" />
-
-                Quick Demo Sandbox Mode
-
-              </button>
-            </>
-          )}
 
         </div>
 

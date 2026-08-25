@@ -6,24 +6,24 @@
 
 
 /* =========================================================
-   DESIGN TOKENS
+   DESIGN TOKENS — NEO-CYAN & DEEP MIDNIGHT
 ========================================================= */
 
 :root {
-  --nid-dark-bg: #070914;
-  --nid-dark-surface: #0b1020;
-  --nid-dark-card: #0f1528;
+  --nid-dark-bg: #030712;
+  --nid-dark-surface: #0b0f19;
+  --nid-dark-card: #111827;
 
-  --nid-light-bg: #f7f8fc;
+  --nid-light-bg: #f8fafc;
   --nid-light-surface: #ffffff;
   --nid-light-card: #ffffff;
 
-  --nid-brand: #6366f1;
-  --nid-brand-light: #818cf8;
-  --nid-brand-dark: #4f46e5;
+  --nid-brand: #06b6d4;
+  --nid-brand-light: #22d3ee;
+  --nid-brand-dark: #0891b2;
 
-  --nid-border-dark: rgba(148, 163, 184, 0.12);
-  --nid-border-light: rgba(15, 23, 42, 0.09);
+  --nid-border-dark: rgba(255, 255, 255, 0.08);
+  --nid-border-light: rgba(15, 23, 42, 0.08);
 }
 
 
@@ -34,7 +34,7 @@
 @layer base {
 
   * {
-    @apply border-ink-700;
+    border-color: rgba(255, 255, 255, 0.08);
   }
 
   html {
@@ -51,12 +51,12 @@
     background:
       radial-gradient(
         circle at 50% -20%,
-        rgba(99, 102, 241, 0.07),
-        transparent 38%
+        rgba(6, 182, 212, 0.12),
+        transparent 42%
       ),
       var(--nid-dark-bg);
 
-    color: #e2e8f0;
+    color: #f1f5f9;
 
     font-feature-settings:
       'cv02',
@@ -70,7 +70,7 @@
   }
 
   ::selection {
-    background: rgba(99, 102, 241, 0.28);
+    background: rgba(6, 182, 212, 0.28);
     color: #ffffff;
   }
 
@@ -86,12 +86,12 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #272d42;
+    background: #1e293b;
     border-radius: 999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #3b435d;
+    background: #334155;
   }
 }
 
@@ -108,14 +108,16 @@
 
   .glass {
     @apply backdrop-blur-xl;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
 
-    background: rgba(11, 16, 32, 0.62);
+    background: rgba(11, 15, 25, 0.65);
 
     border: 1px solid var(--nid-border-dark);
 
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.025),
-      0 8px 32px rgba(0, 0, 0, 0.16);
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 8px 32px rgba(0, 0, 0, 0.35);
 
     transition:
       background-color 220ms ease,
@@ -123,18 +125,17 @@
       box-shadow 220ms ease;
   }
 
-
   .glass-hover {
-    @apply transition-all duration-200;
+    transition: all 200ms ease;
+  }
 
-    &:hover {
-      background: rgba(15, 21, 40, 0.78);
-      border-color: rgba(129, 140, 248, 0.20);
+  .glass-hover:hover {
+    background: rgba(17, 24, 39, 0.82);
+    border-color: rgba(34, 211, 238, 0.25);
 
-      box-shadow:
-        0 12px 40px rgba(0, 0, 0, 0.20),
-        0 0 30px rgba(99, 102, 241, 0.05);
-    }
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.45),
+      0 0 30px rgba(6, 182, 212, 0.10);
   }
 
 
@@ -143,21 +144,23 @@
   ======================================================== */
 
   .card-surface {
-    @apply backdrop-blur-sm rounded-2xl;
+    @apply backdrop-blur-md rounded-2xl;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 
     background:
       linear-gradient(
         145deg,
-        rgba(17, 24, 39, 0.96),
-        rgba(10, 15, 30, 0.96)
+        rgba(17, 24, 39, 0.75),
+        rgba(11, 15, 25, 0.85)
       );
 
-    border: 1px solid rgba(148, 163, 184, 0.13);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 
     box-shadow:
-      0 20px 60px rgba(0, 0, 0, 0.28),
-      0 2px 8px rgba(0, 0, 0, 0.18),
-      inset 0 1px 0 rgba(255, 255, 255, 0.025);
+      0 20px 40px -15px rgba(0, 0, 0, 0.5),
+      0 2px 8px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
     transition:
       background-color 220ms ease,
@@ -173,11 +176,11 @@
   .gradient-text {
     background:
       linear-gradient(
-        100deg,
+        110deg,
         #ffffff 0%,
-        #c7d2fe 38%,
-        #818cf8 72%,
-        #a78bfa 100%
+        #e0f2fe 40%,
+        #38bdf8 70%,
+        #818cf8 100%
       );
 
     background-clip: text;
@@ -195,12 +198,12 @@
     background-image:
       linear-gradient(
         to right,
-        rgba(99, 102, 241, 0.055) 1px,
+        rgba(6, 182, 212, 0.06) 1px,
         transparent 1px
       ),
       linear-gradient(
         to bottom,
-        rgba(99, 102, 241, 0.055) 1px,
+        rgba(6, 182, 212, 0.06) 1px,
         transparent 1px
       );
 
@@ -214,8 +217,8 @@
 
   .glow-brand {
     box-shadow:
-      0 0 0 1px rgba(99, 102, 241, 0.16),
-      0 0 50px -12px rgba(99, 102, 241, 0.50);
+      0 0 0 1px rgba(6, 182, 212, 0.2),
+      0 0 50px -12px rgba(6, 182, 212, 0.45);
   }
 
 
@@ -228,7 +231,7 @@
       linear-gradient(
         90deg,
         transparent,
-        rgba(255, 255, 255, 0.045),
+        rgba(255, 255, 255, 0.06),
         transparent
       );
 
@@ -252,14 +255,18 @@
 
 
 /* =========================================================
-   LIGHT MODE
+   LIGHT MODE BASE
 ========================================================= */
 
 html.light {
 
   color-scheme: light;
 
-  background: #f7f8fc;
+  background: #f8fafc;
+}
+
+html.light * {
+  border-color: rgba(15, 23, 42, 0.08);
 }
 
 
@@ -272,17 +279,17 @@ html.light body {
   background:
     radial-gradient(
       circle at 50% -20%,
-      rgba(99, 102, 241, 0.055),
-      transparent 36%
+      rgba(6, 182, 212, 0.08),
+      transparent 40%
     ),
     linear-gradient(
       180deg,
-      #fafbff 0%,
-      #f7f8fc 45%,
-      #f5f7fb 100%
+      #ffffff 0%,
+      #f8fafc 45%,
+      #f1f5f9 100%
     );
 
-  color: #172033;
+  color: #0f172a;
 }
 
 
@@ -291,7 +298,7 @@ html.light body {
 ========================================================= */
 
 html.light .bg-ink-950 {
-  background-color: #f7f8fc !important;
+  background-color: #f8fafc !important;
 }
 
 html.light .bg-ink-900 {
@@ -312,19 +319,19 @@ html.light .bg-ink-850\/90 {
 }
 
 html.light .bg-ink-800 {
-  background-color: #eef1f7 !important;
+  background-color: #f1f5f9 !important;
 }
 
 html.light .bg-ink-800\/80 {
-  background-color: rgba(238, 241, 247, 0.88) !important;
+  background-color: rgba(241, 245, 249, 0.88) !important;
 }
 
 html.light .bg-ink-800\/50 {
-  background-color: rgba(238, 241, 247, 0.68) !important;
+  background-color: rgba(241, 245, 249, 0.68) !important;
 }
 
 html.light .bg-ink-800\/30 {
-  background-color: rgba(238, 241, 247, 0.45) !important;
+  background-color: rgba(241, 245, 249, 0.45) !important;
 }
 
 
@@ -333,15 +340,15 @@ html.light .bg-ink-800\/30 {
 ========================================================= */
 
 html.light .border-ink-800 {
-  border-color: #e5e9f2 !important;
+  border-color: #e2e8f0 !important;
 }
 
 html.light .border-ink-700 {
-  border-color: #dce2ed !important;
+  border-color: #cbd5e1 !important;
 }
 
 html.light .border-ink-600 {
-  border-color: #c8d0df !important;
+  border-color: #94a3b8 !important;
 }
 
 
@@ -350,27 +357,27 @@ html.light .border-ink-600 {
 ========================================================= */
 
 html.light .text-ink-50 {
-  color: #111827 !important;
+  color: #020617 !important;
 }
 
 html.light .text-ink-100 {
-  color: #1f2937 !important;
+  color: #0f172a !important;
 }
 
 html.light .text-ink-200 {
-  color: #334155 !important;
+  color: #1e293b !important;
 }
 
 html.light .text-ink-300 {
-  color: #475569 !important;
+  color: #334155 !important;
 }
 
 html.light .text-ink-400 {
-  color: #64748b !important;
+  color: #475569 !important;
 }
 
 html.light .text-ink-500 {
-  color: #94a3b8 !important;
+  color: #64748b !important;
 }
 
 
@@ -379,19 +386,19 @@ html.light .text-ink-500 {
 ========================================================= */
 
 html.light .hover\:bg-ink-900:hover {
-  background-color: #f8faff !important;
+  background-color: #f8fafc !important;
 }
 
 html.light .hover\:bg-ink-800:hover {
-  background-color: #e8ecf4 !important;
+  background-color: #f1f5f9 !important;
 }
 
 html.light .hover\:bg-ink-800\/50:hover {
-  background-color: rgba(226, 232, 240, 0.68) !important;
+  background-color: rgba(241, 245, 249, 0.75) !important;
 }
 
 html.light .hover\:border-ink-600:hover {
-  border-color: #aeb9ca !important;
+  border-color: #64748b !important;
 }
 
 
@@ -403,9 +410,9 @@ html.light input,
 html.light textarea,
 html.light select {
 
-  color: #172033;
+  color: #0f172a;
 
-  background-color: rgba(255, 255, 255, 0.82);
+  background-color: rgba(255, 255, 255, 0.90);
 
   color-scheme: light;
 }
@@ -420,10 +427,10 @@ html.light input:focus,
 html.light textarea:focus,
 html.light select:focus {
 
-  border-color: rgba(99, 102, 241, 0.65);
+  border-color: rgba(6, 182, 212, 0.65);
 
   box-shadow:
-    0 0 0 3px rgba(99, 102, 241, 0.08);
+    0 0 0 3px rgba(6, 182, 212, 0.12);
 }
 
 
@@ -436,16 +443,16 @@ html.light .card-surface {
   background:
     linear-gradient(
       145deg,
-      rgba(255, 255, 255, 0.98),
-      rgba(249, 250, 253, 0.98)
+      rgba(255, 255, 255, 0.95),
+      rgba(248, 250, 252, 0.95)
     ) !important;
 
-  border-color: rgba(15, 23, 42, 0.085) !important;
+  border-color: rgba(15, 23, 42, 0.06) !important;
 
   box-shadow:
-    0 20px 50px rgba(15, 23, 42, 0.07),
-    0 4px 12px rgba(15, 23, 42, 0.035),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    0 20px 40px -15px rgba(15, 23, 42, 0.05),
+    0 4px 12px rgba(15, 23, 42, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
 
@@ -455,23 +462,23 @@ html.light .card-surface {
 
 html.light .glass {
 
-  background: rgba(255, 255, 255, 0.70) !important;
+  background: rgba(255, 255, 255, 0.75) !important;
 
-  border-color: rgba(15, 23, 42, 0.085) !important;
+  border-color: rgba(15, 23, 42, 0.06) !important;
 
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 
   box-shadow:
-    0 8px 30px rgba(15, 23, 42, 0.045),
+    0 8px 30px rgba(15, 23, 42, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
-
 html.light .glass-hover:hover {
 
-  background: rgba(255, 255, 255, 0.90);
+  background: rgba(255, 255, 255, 0.95);
 
-  border-color: rgba(99, 102, 241, 0.25);
+  border-color: rgba(6, 182, 212, 0.30);
 }
 
 
@@ -483,11 +490,10 @@ html.light .gradient-text {
 
   background:
     linear-gradient(
-      100deg,
-      #111827 0%,
-      #334155 38%,
-      #4f46e5 72%,
-      #7c3aed 100%
+      110deg,
+      #0f172a 0%,
+      #0284c7 45%,
+      #2563eb 100%
     );
 
   background-clip: text;
@@ -506,12 +512,12 @@ html.light .grid-bg {
   background-image:
     linear-gradient(
       to right,
-      rgba(79, 70, 229, 0.055) 1px,
+      rgba(2, 132, 199, 0.06) 1px,
       transparent 1px
     ),
     linear-gradient(
       to bottom,
-      rgba(79, 70, 229, 0.055) 1px,
+      rgba(2, 132, 199, 0.06) 1px,
       transparent 1px
     );
 }
@@ -524,8 +530,8 @@ html.light .grid-bg {
 html.light .glow-brand {
 
   box-shadow:
-    0 0 0 1px rgba(99, 102, 241, 0.10),
-    0 0 45px -15px rgba(99, 102, 241, 0.28);
+    0 0 0 1px rgba(6, 182, 212, 0.15),
+    0 0 45px -15px rgba(6, 182, 212, 0.30);
 }
 
 
@@ -539,7 +545,7 @@ html.light .shimmer-bg {
     linear-gradient(
       90deg,
       transparent,
-      rgba(99, 102, 241, 0.035),
+      rgba(6, 182, 212, 0.05),
       transparent
     );
 
@@ -553,17 +559,17 @@ html.light .shimmer-bg {
 
 html.light ::-webkit-scrollbar-track {
 
-  background: #f7f8fc;
+  background: #f8fafc;
 }
 
 html.light ::-webkit-scrollbar-thumb {
 
-  background: #cbd3e1;
+  background: #cbd5e1;
 }
 
 html.light ::-webkit-scrollbar-thumb:hover {
 
-  background: #aeb9ca;
+  background: #94a3b8;
 }
 
 
@@ -573,9 +579,9 @@ html.light ::-webkit-scrollbar-thumb:hover {
 
 html.light ::selection {
 
-  background: rgba(79, 70, 229, 0.16);
+  background: rgba(6, 182, 212, 0.20);
 
-  color: #111827;
+  color: #0f172a;
 }
 
 
@@ -584,39 +590,29 @@ html.light ::selection {
 ========================================================= */
 
 html.light .bg-brand-600 {
-  background-color: #4f46e5;
+  background-color: #0891b2;
 }
 
 html.light .hover\:bg-brand-500:hover {
-  background-color: #6366f1;
+  background-color: #06b6d4;
 }
 
 html.light .border-brand-500\/50 {
-  border-color: rgba(99, 102, 241, 0.38);
+  border-color: rgba(6, 182, 212, 0.40);
 }
 
 
 /* =========================================================
-   LIGHT — SUCCESS
+   STATUS COLORS (LIGHT MODE OVERRIDES)
 ========================================================= */
 
 html.light .text-success-400 {
   color: #16a34a !important;
 }
 
-
-/* =========================================================
-   LIGHT — WARNING
-========================================================= */
-
 html.light .text-warning-400 {
   color: #d97706 !important;
 }
-
-
-/* =========================================================
-   LIGHT — DANGER
-========================================================= */
 
 html.light .text-danger-400 {
   color: #dc2626 !important;
@@ -624,7 +620,7 @@ html.light .text-danger-400 {
 
 
 /* =========================================================
-   REDUCE MOTION
+   ACCESSIBILITY: REDUCE MOTION
 ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {

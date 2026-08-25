@@ -241,53 +241,7 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
             NETWORK
         ==================================================== */}
 
-        <div
-          className="
-            hidden md:flex
-            items-center gap-2
-            px-3 py-1.5
-            rounded-lg
-            border border-ink-700
-            bg-ink-800/50
-            theme-transition
-          "
-        >
-          <span
-            className="
-              w-2 h-2
-              rounded-full
-              bg-success-400
-              animate-pulse
-            "
-          />
-
-          <span className="text-xs font-medium text-ink-200">
-            SOLANA
-          </span>
-
-          <span className="text-xs text-ink-500">
-            ·
-          </span>
-
-          <span className="text-xs font-medium text-ink-200">
-            ETHEREUM
-          </span>
-
-          <span
-            className="
-              text-xs
-              text-warning-400
-              ml-1
-              px-1.5 py-0.5
-              rounded
-              border border-warning-500/20
-              text-[10px]
-            "
-          >
-            TESTNET
-          </span>
-        </div>
-
+      
         {/* ===================================================
             DARK / LIGHT MODE
         ==================================================== */}
