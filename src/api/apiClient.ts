@@ -1,38 +1,166 @@
 // src/api/apiClient.ts
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081/api/v1';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:8081/api/v1";
 
-async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+// ============================================================
+// Request
+// ============================================================
+
+async function request<T>(
+  endpoint: string,
+  options: RequestInit = {},
+): Promise<T> {
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
+    Accept: "application/json",
     ...options.headers,
   };
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-    credentials: 'include', // Automatically sends the cookie with the request
-  });
+  const response = await fetch(
+    `${API_BASE_URL}${endpoint}`,
+    {
+      ...options,
+      headers,
+
+      // IMPORTANT:
+      // Send NID session cookie
+      credentials: "include",
+    },
+  );
+
+  // ============================================================
+  // Handle errors
+  // ============================================================
 
   if (!response.ok) {
     const errorText = await response.text();
-    let errorMessage = 'An error occurred';
+
+    let errorMessage =
+      "An error occurred";
+
     try {
-      const errorJson = JSON.parse(errorText);
-      errorMessage = errorJson.message || errorText;
+      const errorJson = JSON.parse(
+        errorText,
+      );
+
+      errorMessage =
+        errorJson.message ||
+        errorJson.error ||
+        errorText ||
+        response.statusText;
     } catch {
-      errorMessage = errorText || response.statusText;
+      errorMessage =
+        errorText ||
+        response.statusText;
     }
+
     throw new Error(errorMessage);
   }
 
-  const text = await response.text();
-  return text ? JSON.parse(text) : ({} as T);
+  // ============================================================
+  // Empty response
+  // ============================================================
+
+  const text =
+    await response.text();
+
+  if (!text) {
+    return {} as T;
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error(
+      "Invalid JSON response from server",
+    );
+  }
 }
 
+// ============================================================
+// API CLIENT
+// ============================================================
+
 export const apiClient = {
-  get: <T>(endpoint: string) => request<T>(endpoint, { method: 'GET' }),
-  post: <T>(endpoint: string, body: any) => request<T>(endpoint, { method: 'POST', body: JSON.stringify(body) }),
-  put: <T>(endpoint: string, body: any) => request<T>(endpoint, { method: 'PUT', body: JSON.stringify(body) }),
-  delete: <T>(endpoint: string) => request<T>(endpoint, { method: 'DELETE' }),
+  // ----------------------------------------------------------
+  // GET
+  // ----------------------------------------------------------
+
+  get: <T>(
+    endpoint: string,
+  ): Promise<T> => {
+    return request<T>(
+      endpoint,
+      {
+        method: "GET",
+      },
+    );
+  },
+
+  // ----------------------------------------------------------
+  // POST
+  // ----------------------------------------------------------
+
+  post: <T>(
+endpoint: string, body: unknown, p0: { credentials: string; },
+  ): Promise<T> => {
+    return request<T>(
+      endpoint,
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+    );
+  },
+
+  // ----------------------------------------------------------
+  // PUT
+  // ----------------------------------------------------------
+
+  put: <T>(
+    endpoint: string,
+    body: unknown,
+  ): Promise<T> => {
+    return request<T>(
+      endpoint,
+      {
+        method: "PUT",
+        body: JSON.stringify(body),
+      },
+    );
+  },
+
+  // ----------------------------------------------------------
+  // PATCH
+  // ----------------------------------------------------------
+
+  patch: <T>(
+    endpoint: string,
+    body: unknown,
+  ): Promise<T> => {
+    return request<T>(
+      endpoint,
+      {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      },
+    );
+  },
+
+  // ----------------------------------------------------------
+  // DELETE
+  // ----------------------------------------------------------
+
+  delete: <T>(
+    endpoint: string,
+  ): Promise<T> => {
+    return request<T>(
+      endpoint,
+      {
+        method: "DELETE",
+      },
+    );
+  },
 };

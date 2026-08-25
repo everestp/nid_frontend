@@ -1,6 +1,6 @@
 // src/pages/OAuthAuthorize.tsx
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -10,12 +10,15 @@ import {
   Loader2,
   ShieldCheck,
   X,
+  Globe,
+  ExternalLink,
 } from "lucide-react";
 
 import { Logo } from "@/components/Logo";
 import { authApi } from "@/api/authApi";
 
-const NID_BACKEND = "http://localhost:8081";
+const NID_BACKEND =
+  import.meta.env.VITE_NID_BACKEND || "http://localhost:8081";
 
 interface OAuthRequest {
   clientId: string;
@@ -28,16 +31,31 @@ interface OAuthRequest {
   codeChallengeMethod: string;
 }
 
+interface ClientDetails {
+  clientName: string;
+  clientLogo: string;
+  clientUri: string;
+  policyUri: string;
+}
+
 export default function OAuthAuthorize() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
 
   const [handle, setHandle] = useState("");
+  const [clientDetails, setClientDetails] =
+    useState<ClientDetails>({
+      clientName: "",
+      clientLogo: "",
+      clientUri: "",
+      policyUri: "",
+    });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   // ============================================================
-  // OAuth request
+  // OAuth Parameters
   // ============================================================
 
   const oauth = useMemo<OAuthRequest>(
@@ -47,16 +65,56 @@ export default function OAuthAuthorize() {
       responseType: params.get("response_type") || "",
       scope: params.get("scope") || "openid",
       state: params.get("state") || "",
-      nonce: params.get("nonce") || "121",
+      nonce: params.get("nonce") || "",
       codeChallenge: params.get("code_challenge") || "",
       codeChallengeMethod:
         params.get("code_challenge_method") || "",
     }),
-    [params],
+    [params]
   );
 
   // ============================================================
-  // Validate OAuth request
+  // Load OAuth Client Information
+  // ============================================================
+
+  useEffect(() => {
+    const fetchClientDetails = async () => {
+      if (!oauth.clientId) {
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${NID_BACKEND}/oauth/client-info?client_id=${encodeURIComponent(
+            oauth.clientId
+          )}`
+        );
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+
+        setClientDetails({
+          clientName: data.client_name || "",
+          clientLogo: data.client_logo || "",
+          clientUri: data.client_uri || "",
+          policyUri: data.policy_uri || "",
+        });
+      } catch (err) {
+        console.error(
+          "Failed to fetch OAuth client information:",
+          err
+        );
+      }
+    };
+
+    fetchClientDetails();
+  }, [oauth.clientId]);
+
+  // ============================================================
+  // Validate OAuth Request
   // ============================================================
 
   const validateOAuthRequest = (): string | null => {
@@ -72,7 +130,12 @@ export default function OAuthAuthorize() {
       return "Only response_type=code is supported.";
     }
 
-    if (!oauth.scope.split(/\s+/).includes("openid")) {
+    const scopes = oauth.scope
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+
+    if (!scopes.includes("openid")) {
       return "The openid scope is required.";
     }
 
@@ -88,10 +151,10 @@ export default function OAuthAuthorize() {
   };
 
   // ============================================================
-  // Normalize NID handle
+  // Normalize Handle
   // ============================================================
 
-  const normalizeHandle = (value: string) => {
+  const normalizeHandle = (value: string): string => {
     return value
       .trim()
       .replace(/^@/, "")
@@ -100,7 +163,7 @@ export default function OAuthAuthorize() {
   };
 
   // ============================================================
-  // Wallet authentication
+  // Wallet Authentication
   // ============================================================
 
   const authenticateWallet = async (): Promise<void> => {
@@ -117,47 +180,41 @@ export default function OAuthAuthorize() {
 
     if (!solanaProvider && !ethereumProvider) {
       throw new Error(
-        "No crypto wallet found. Please install Phantom or MetaMask.",
+        "No crypto wallet found. Please install Phantom or MetaMask."
       );
     }
 
-    let address = "";
-    let chain = "";
-    let signature = "";
-    let message = "";
+    const message =
+      `Sign in to NID with handle: ${fullHandle}`;
 
     // ==========================================================
-    // SOLANA / PHANTOM
+    // Solana
     // ==========================================================
 
     if (solanaProvider?.isPhantom) {
-      const resp = await solanaProvider.connect();
+      const wallet = await solanaProvider.connect();
 
-      address = resp.publicKey.toString();
-      chain = "solana";
+      const address = wallet.publicKey.toString();
 
-      message = `Sign in to NID with handle: ${fullHandle}`;
-
-      const encodedMessage = new TextEncoder().encode(message);
+      const encodedMessage =
+        new TextEncoder().encode(message);
 
       const signed = await solanaProvider.signMessage(
         encodedMessage,
-        "utf8",
+        "utf8"
       );
 
-      const sigBytes = signed.signature || signed;
+      const signatureBytes =
+        signed.signature || signed;
 
-      signature = btoa(
-        String.fromCharCode(...sigBytes),
+      const signature = btoa(
+        String.fromCharCode(...signatureBytes)
       );
-
-      // This request should create the NID HttpOnly
-      // authentication cookie.
 
       await authApi.walletLogin({
         handle: cleanHandle,
         address,
-        chain,
+        chain: "solana",
         message,
         signature,
       });
@@ -166,37 +223,36 @@ export default function OAuthAuthorize() {
     }
 
     // ==========================================================
-    // EVM / METAMASK
+    // EVM
     // ==========================================================
 
     if (ethereumProvider) {
-      const accounts = await ethereumProvider.request({
-        method: "eth_requestAccounts",
-      });
+      const accounts =
+        await ethereumProvider.request({
+          method: "eth_requestAccounts",
+        });
 
       if (!accounts?.length) {
         throw new Error(
-          "No EVM wallet account found.",
+          "No EVM wallet account found."
         );
       }
 
-      address = accounts[0];
-      chain = "evm";
+      const address = accounts[0];
 
-      message = `Sign in to NID with handle: ${fullHandle}`;
-
-      signature = await ethereumProvider.request({
-        method: "personal_sign",
-        params: [
-          message,
-          address,
-        ],
-      });
+      const signature =
+        await ethereumProvider.request({
+          method: "personal_sign",
+          params: [
+            message,
+            address,
+          ],
+        });
 
       await authApi.walletLogin({
         handle: cleanHandle,
         address,
-        chain,
+        chain: "evm",
         message,
         signature,
       });
@@ -205,130 +261,127 @@ export default function OAuthAuthorize() {
     }
 
     throw new Error(
-      "Unsupported wallet provider.",
+      "Unsupported wallet provider."
     );
   };
 
   // ============================================================
-  // Continue OAuth authorization
+  // Approve OAuth Authorization
+  // ============================================================
+
+  const approveAuthorization = async () => {
+    const response = await fetch(
+      `${NID_BACKEND}/oauth/authorize/approve`,
+      {
+        method: "POST",
+
+        // VERY IMPORTANT
+        // Send NID session cookie
+        credentials: "include",
+
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+
+        body: JSON.stringify({
+          client_id: oauth.clientId,
+          redirect_uri: oauth.redirectUri,
+          response_type: oauth.responseType,
+          scope: oauth.scope,
+          state: oauth.state,
+          nonce: oauth.nonce,
+          code_challenge: oauth.codeChallenge,
+          code_challenge_method:
+            oauth.codeChallengeMethod,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      let message = "Authorization failed.";
+
+      try {
+        const data = await response.json();
+
+        if (data?.message) {
+          message = data.message;
+        }
+      } catch {
+        // ignore invalid JSON
+      }
+
+      throw new Error(message);
+    }
+
+    return response.json();
+  };
+
+  // ============================================================
+  // Continue
   // ============================================================
 
   const handleContinue = async () => {
     setError("");
 
-    // ----------------------------------------------------------
-    // Validate OAuth request
-    // ----------------------------------------------------------
-
-    const validationError = validateOAuthRequest();
+    const validationError =
+      validateOAuthRequest();
 
     if (validationError) {
       setError(validationError);
       return;
     }
 
-    // ----------------------------------------------------------
-    // Validate handle
-    // ----------------------------------------------------------
-
     if (!handle.trim()) {
-      setError("Please enter your .nid handle.");
+      setError(
+        "Please enter your .nid handle."
+      );
       return;
     }
 
     try {
       setLoading(true);
 
-      // ========================================================
-      // Authenticate NID user
-      // ========================================================
+      // --------------------------------------------------------
+      // 1. Wallet authentication
+      // --------------------------------------------------------
 
       await authenticateWallet();
 
-      // ========================================================
-      // Approve OAuth authorization
-      // ========================================================
-      //
-      // IMPORTANT:
-      //
-      // No nid_token is sent here.
-      //
-      // authApi.walletLogin() should have created the
-      // HttpOnly NID session cookie.
-      //
-      // The NID backend gets the user ID from that cookie.
-      //
-      // ========================================================
+      // --------------------------------------------------------
+      // 2. Approve OAuth request
+      // --------------------------------------------------------
 
-      const response = await fetch(
-        `${NID_BACKEND}/oauth/authorize/approve`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            // Tell the backend to give us JSON instead of auto-redirecting
-            "Accept": "application/json",
-          },
-          body: JSON.stringify({
-            client_id: oauth.clientId,
-            redirect_uri: oauth.redirectUri,
-            response_type: oauth.responseType,
-            scope: oauth.scope,
-            state: oauth.state,
-            nonce: oauth.nonce,
-            code_challenge: oauth.codeChallenge,
-            code_challenge_method: oauth.codeChallengeMethod,
-          }),
-        },
+      const authorization =
+        await approveAuthorization();
+
+      // --------------------------------------------------------
+      // 3. Backend creates redirect URI
+      // --------------------------------------------------------
+
+      if (!authorization?.redirect_uri) {
+        throw new Error(
+          "NID did not return a redirect URI."
+        );
+      }
+
+      // --------------------------------------------------------
+      // 4. Redirect user back to OAuth client
+      // --------------------------------------------------------
+
+      window.location.assign(
+        authorization.redirect_uri
       );
-
-      // ========================================================
-      // Handle failed authorization
-      // ========================================================
-
-      if (!response.ok) {
-        let message = "Authorization failed.";
-
-        try {
-          const errData = await response.json();
-
-          if (errData?.message) {
-            message = errData.message;
-          }
-        } catch {
-          // Ignore JSON parsing failure.
-        }
-
-        throw new Error(message);
-      }
-
-      // ========================================================
-      // Get redirect URI
-      // ========================================================
-
-      const responseData = await response.json();
-
-      if (!responseData?.redirect_uri) {
-        throw new Error("NID did not return a redirect URI.");
-      }
-
-      // ========================================================
-      // Redirect back to OAuth client
-      // ========================================================
-
-      window.location.href = responseData.redirect_uri;
-
     } catch (err) {
       console.error(
         "OAuth authorization failed:",
-        err,
+        err
       );
 
       setError(
         err instanceof Error
           ? err.message
-          : "Authorization failed.",
+          : "Authorization failed."
       );
 
       setLoading(false);
@@ -336,7 +389,7 @@ export default function OAuthAuthorize() {
   };
 
   // ============================================================
-  // Cancel OAuth authorization
+  // Cancel OAuth
   // ============================================================
 
   const handleCancel = () => {
@@ -347,28 +400,28 @@ export default function OAuthAuthorize() {
 
     try {
       const callback = new URL(
-        oauth.redirectUri,
+        oauth.redirectUri
       );
 
       callback.searchParams.set(
         "error",
-        "access_denied",
+        "access_denied"
       );
 
       callback.searchParams.set(
         "error_description",
-        "The user denied the authorization request.",
+        "The user denied the authorization request."
       );
 
       if (oauth.state) {
         callback.searchParams.set(
           "state",
-          oauth.state,
+          oauth.state
         );
       }
 
       window.location.assign(
-        callback.toString(),
+        callback.toString()
       );
     } catch {
       navigate("/");
@@ -376,13 +429,19 @@ export default function OAuthAuthorize() {
   };
 
   // ============================================================
-  // Render
+  // Display
+  // ============================================================
+
+  const displayName =
+    clientDetails.clientName ||
+    "An application";
+
+  // ============================================================
+  // UI
   // ============================================================
 
   return (
     <div className="min-h-screen bg-ink-950 grid-bg flex items-center justify-center p-6 text-ink-100">
-
-      {/* Background glow */}
 
       <div
         className="
@@ -393,9 +452,9 @@ export default function OAuthAuthorize() {
           -translate-y-1/2
           w-[500px]
           h-[500px]
-          bg-brand-600/10
+          bg-brand-600/15
           rounded-full
-          blur-[120px]
+          blur-[140px]
         "
       />
 
@@ -414,11 +473,12 @@ export default function OAuthAuthorize() {
         className="relative w-full max-w-md"
       >
 
-        {/* ====================================================
+        {/* ======================================================
             Logo
-            ==================================================== */}
+        ====================================================== */}
 
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
+
           <button
             onClick={() => navigate("/")}
             className="inline-block"
@@ -426,136 +486,100 @@ export default function OAuthAuthorize() {
           >
             <Logo size={40} />
           </button>
+
         </div>
 
-        {/* ====================================================
+        {/* ======================================================
             Card
-            ==================================================== */}
+        ====================================================== */}
 
-        <div className="card-surface p-8 shadow-2xl">
+        <div
+          className="
+            card-surface
+            p-8
+            shadow-2xl
+            border
+            border-ink-800
+            rounded-2xl
+            bg-ink-900/80
+            backdrop-blur-xl
+          "
+        >
 
-          {/* ==================================================
-              Header
-              ================================================== */}
+          {/* ====================================================
+              Client
+          ==================================================== */}
 
-          <div className="flex items-start justify-between gap-4 mb-6">
-
-            <div>
-              <h1 className="text-xl font-semibold text-ink-50">
-                Sign in with NID
-              </h1>
-
-              <p className="text-xs text-ink-400 mt-1">
-                Securely continue to this application
-              </p>
-            </div>
+          <div className="text-center mb-8">
 
             <div
               className="
-                shrink-0
-                inline-flex
+                mx-auto
+                mb-4
+                flex
+                h-16
+                w-16
                 items-center
-                gap-1.5
-                px-2.5
-                py-1
-                rounded-md
-                text-xs
-                font-medium
+                justify-center
+                rounded-2xl
+                bg-brand-500/10
                 border
                 border-brand-500/20
-                bg-brand-500/10
                 text-brand-400
+                overflow-hidden
               "
             >
-              <ShieldCheck className="w-3.5 h-3.5" />
-
-              OAuth
+              {clientDetails.clientLogo ? (
+                <img
+                  src={clientDetails.clientLogo}
+                  alt={displayName}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <Globe className="w-8 h-8" />
+              )}
             </div>
 
+            <h1 className="text-xl font-bold text-ink-50">
+              {displayName}
+            </h1>
+
+            <p className="text-sm text-ink-300 mt-1">
+              wants to sign you in with NID
+            </p>
+
+            {clientDetails.clientUri ? (
+              <a
+                href={clientDetails.clientUri}
+                target="_blank"
+                rel="noreferrer"
+                className="
+                  inline-flex
+                  items-center
+                  gap-1
+                  text-xs
+                  text-brand-400
+                  hover:text-brand-300
+                  mt-2
+                "
+              >
+                {clientDetails.clientUri}
+
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            ) : (
+              <p className="text-xs text-ink-500 mt-2 break-all font-mono">
+                {oauth.redirectUri}
+              </p>
+            )}
+
           </div>
 
-          {/* ==================================================
-              Application
-              ================================================== */}
+          <div className="h-px bg-ink-800 my-6" />
 
-          <div
-            className="
-              mb-5
-              rounded-lg
-              border
-              border-brand-500/20
-              bg-brand-500/5
-              px-4
-              py-4
-            "
-          >
-            <p
-              className="
-                text-xs
-                text-ink-400
-                uppercase
-                tracking-wider
-              "
-            >
-              Application
-            </p>
-
-            <p
-              className="
-                text-sm
-                font-medium
-                text-ink-100
-                mt-1
-                break-all
-              "
-            >
-              {oauth.clientId ||
-                "Unknown application"}
-            </p>
-          </div>
-
-          {/* ==================================================
-              Redirect URI
-              ================================================== */}
-
-          <div
-            className="
-              mb-5
-              rounded-lg
-              border
-              border-ink-700
-              bg-ink-800/50
-              px-4
-              py-4
-            "
-          >
-            <p
-              className="
-                text-xs
-                text-ink-500
-                uppercase
-                tracking-wider
-              "
-            >
-              Redirect
-            </p>
-
-            <p
-              className="
-                text-xs
-                text-ink-300
-                mt-1
-                break-all
-              "
-            >
-              {oauth.redirectUri ||
-                "Unknown redirect URI"}
-            </p>
-          </div>
-
-          {/* ==================================================
-              Requested permissions
-              ================================================== */}
+          {/* ====================================================
+              Permissions
+          ==================================================== */}
 
           <div className="mb-6">
 
@@ -565,45 +589,38 @@ export default function OAuthAuthorize() {
                 text-ink-400
                 uppercase
                 tracking-wider
-                mb-2
+                mb-3
+                font-medium
               "
             >
-              Requested permissions
+              This app will be able to:
             </p>
 
-            <div className="flex flex-wrap gap-2">
+            <ul className="space-y-3 text-xs text-ink-300">
 
-              {oauth.scope
-                .split(/\s+/)
-                .filter(Boolean)
-                .map((scope) => (
-                  <span
-                    key={scope}
-                    className="
-                      px-2.5
-                      py-1
-                      rounded-md
-                      bg-brand-500/10
-                      border
-                      border-brand-500/20
-                      text-xs
-                      text-brand-300
-                    "
-                  >
-                    {scope}
-                  </span>
-                ))}
+              <li className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
 
-            </div>
+                View your basic NID identity
+              </li>
+
+              <li className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
+
+                Verify your NID handle
+              </li>
+
+            </ul>
+
           </div>
 
-          {/* ==================================================
-              Security notice
-              ================================================== */}
+          {/* ====================================================
+              Security
+          ==================================================== */}
 
           <div
             className="
-              mb-6
+              mb-5
               flex
               gap-3
               p-4
@@ -637,11 +654,11 @@ export default function OAuthAuthorize() {
 
           </div>
 
-          {/* ==================================================
+          {/* ====================================================
               Handle
-              ================================================== */}
+          ==================================================== */}
 
-          <div className="mb-4">
+          <div className="mb-5">
 
             <label
               className="
@@ -654,7 +671,7 @@ export default function OAuthAuthorize() {
                 tracking-wider
               "
             >
-              Your .nid Handle
+              Confirm your .nid handle
             </label>
 
             <div className="relative">
@@ -726,11 +743,12 @@ export default function OAuthAuthorize() {
               </span>
 
             </div>
+
           </div>
 
-          {/* ==================================================
+          {/* ====================================================
               Error
-              ================================================== */}
+          ==================================================== */}
 
           {error && (
             <motion.div
@@ -747,17 +765,16 @@ export default function OAuthAuthorize() {
                 items-start
                 gap-2
                 text-sm
-                text-danger-400
-                bg-danger-500/10
+                text-red-400
+                bg-red-500/10
                 border
-                border-danger-500/20
+                border-red-500/20
                 rounded-lg
                 px-3
                 py-3
                 mb-4
               "
             >
-
               <AlertCircle
                 className="
                   w-4
@@ -767,124 +784,135 @@ export default function OAuthAuthorize() {
                 "
               />
 
-              <span>
-                {error}
-              </span>
-
+              <span>{error}</span>
             </motion.div>
           )}
 
-          {/* ==================================================
-              Continue
-              ================================================== */}
+          {/* ====================================================
+              Actions
+          ==================================================== */}
 
-          <button
-            onClick={handleContinue}
-            disabled={
-              loading ||
-              !handle.trim() ||
-              !oauth.clientId ||
-              !oauth.redirectUri
-            }
+          <div className="space-y-3">
+
+            <button
+              onClick={handleContinue}
+              disabled={
+                loading ||
+                !handle.trim() ||
+                !oauth.clientId ||
+                !oauth.redirectUri
+              }
+              className="
+                w-full
+                inline-flex
+                items-center
+                justify-center
+                gap-2
+                bg-white
+                hover:bg-gray-100
+                text-black
+                font-semibold
+                px-4
+                py-3
+                rounded-xl
+                transition-all
+                disabled:opacity-50
+                disabled:cursor-not-allowed
+                shadow-lg
+              "
+            >
+              {loading ? (
+                <>
+                  <Loader2
+                    className="
+                      w-4
+                      h-4
+                      animate-spin
+                    "
+                  />
+
+                  Verifying wallet...
+                </>
+              ) : (
+                <>
+                  Continue
+
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={handleCancel}
+              disabled={loading}
+              className="
+                w-full
+                inline-flex
+                items-center
+                justify-center
+                gap-2
+                px-4
+                py-3
+                rounded-xl
+                border
+                border-ink-700
+                hover:bg-ink-800
+                text-ink-300
+                transition
+                disabled:opacity-50
+                text-sm
+                font-medium
+              "
+            >
+              <X className="w-4 h-4" />
+
+              Cancel
+            </button>
+
+          </div>
+
+          {/* ====================================================
+              Footer
+          ==================================================== */}
+
+          <div
             className="
-              w-full
-              inline-flex
+              mt-6
+              flex
               items-center
               justify-center
-              gap-2
-              bg-brand-600
-              hover:bg-brand-500
-              text-white
-              font-medium
-              px-4
-              py-3
-              rounded-lg
-              transition-colors
-              border
-              border-brand-500/50
-              disabled:opacity-50
-              disabled:cursor-not-allowed
-              shadow-lg
-              shadow-brand-950
+              gap-4
+              text-[11px]
+              text-ink-500
             "
           >
 
-            {loading ? (
+            {clientDetails.policyUri && (
               <>
-                <Loader2
-                  className="
-                    w-4
-                    h-4
-                    animate-spin
-                  "
-                />
+                <a
+                  href={clientDetails.policyUri}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:underline"
+                >
+                  Privacy Policy
+                </a>
 
-                Verifying wallet...
-              </>
-            ) : (
-              <>
-                Continue with NID
-
-                <ArrowRight
-                  className="w-4 h-4"
-                />
+                <span>•</span>
               </>
             )}
 
-          </button>
+            <span>
+              Secured by NID OpenID Connect
+            </span>
 
-          {/* ==================================================
-              Cancel
-              ================================================== */}
-
-          <button
-            onClick={handleCancel}
-            disabled={loading}
-            className="
-              mt-3
-              w-full
-              inline-flex
-              items-center
-              justify-center
-              gap-2
-              px-4
-              py-3
-              rounded-lg
-              border
-              border-ink-700
-              hover:bg-ink-800
-              text-ink-300
-              transition
-              disabled:opacity-50
-            "
-          >
-
-            <X className="w-4 h-4" />
-
-            Cancel
-
-          </button>
-
-          {/* ==================================================
-              Footer
-              ================================================== */}
-
-          <p
-            className="
-              text-xs
-              text-ink-500
-              text-center
-              mt-6
-            "
-          >
-            Secured by NID OAuth 2.0 / OpenID Connect
-          </p>
+          </div>
 
         </div>
 
-        {/* ====================================================
+        {/* ======================================================
             Back
-            ==================================================== */}
+        ====================================================== */}
 
         <button
           onClick={() => navigate("/")}

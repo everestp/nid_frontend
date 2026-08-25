@@ -18,18 +18,15 @@ import { authApi } from '@/api/authApi';
 export function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-
   const { demoLogin } = useAuth();
 
   const [handle, setHandle] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  /*
-   * ============================================================
-   * OAuth / OIDC CONTEXT
-   * ============================================================
-   */
+  // ============================================================
+  // OIDC / OAuth CONTEXT
+  // ============================================================
 
   const isOAuthLogin = searchParams.get('oauth') === '1';
 
@@ -45,164 +42,240 @@ export function Login() {
       searchParams.get('code_challenge_method') || 'S256',
   };
 
-  /*
-   * ============================================================
-   * WALLET LOGIN
-   * ============================================================
-   */
+  // ============================================================
+  // NORMALIZE HANDLE
+  // ============================================================
 
-  const handleWalletSignIn = async (e: React.FormEvent) => {
+  const normalizeHandle = (value: string) => {
+    return value
+      .trim()
+      .replace(/^@/, '')
+      .toLowerCase()
+      .replace(/\.nid$/, '');
+  };
+
+  // ============================================================
+  // WALLET LOGIN
+  // ============================================================
+
+  const handleWalletSignIn = async (
+    e: React.FormEvent
+  ) => {
     e.preventDefault();
 
-    if (!handle.trim()) return;
+    if (!handle.trim()) {
+      return;
+    }
 
     setLoading(true);
     setError('');
 
     try {
-      /*
-       * --------------------------------------------------------
-       * 1. Normalize handle
-       * --------------------------------------------------------
-       */
+      // ----------------------------------------------------------
+      // 1. Normalize handle
+      // ----------------------------------------------------------
 
-      const cleanHandle = handle
-        .trim()
-        .replace(/^@/, '')
-        .toLowerCase()
-        .replace(/\.nid$/, '');
-
+      const cleanHandle = normalizeHandle(handle);
       const fullHandle = `${cleanHandle}.nid`;
 
-      /*
-       * --------------------------------------------------------
-       * 2. Detect wallet
-       * --------------------------------------------------------
-       */
+      // ----------------------------------------------------------
+      // 2. Detect wallet
+      // ----------------------------------------------------------
 
       const solanaProvider = (window as any).solana;
       const ethereumProvider = (window as any).ethereum;
 
       if (!solanaProvider && !ethereumProvider) {
         throw new Error(
-          'No crypto wallet found! Please install Phantom or MetaMask.'
+          'No crypto wallet found. Please install Phantom or MetaMask.'
         );
       }
 
       let address = '';
       let chain = '';
 
-      /*
-       * --------------------------------------------------------
-       * 3. Connect wallet
-       * --------------------------------------------------------
-       */
+      // ----------------------------------------------------------
+      // 3. Connect wallet
+      // ----------------------------------------------------------
 
       if (solanaProvider?.isPhantom) {
-        const resp = await solanaProvider.connect();
+        const response = await solanaProvider.connect();
 
-        address = resp.publicKey.toString();
+        address = response.publicKey.toString();
         chain = 'solana';
       } else if (ethereumProvider) {
-        const accounts = await ethereumProvider.request({
-          method: 'eth_requestAccounts',
-        });
+        const accounts =
+          await ethereumProvider.request({
+            method: 'eth_requestAccounts',
+          });
 
         if (!accounts?.length) {
-          throw new Error('No EVM wallet account found.');
+          throw new Error(
+            'No EVM wallet account found.'
+          );
         }
 
         address = accounts[0];
         chain = 'evm';
       } else {
-        throw new Error('Unsupported wallet provider.');
+        throw new Error(
+          'Unsupported wallet provider.'
+        );
       }
 
-      /*
-       * --------------------------------------------------------
-       * 4. Authentication message
-       * --------------------------------------------------------
-       */
+      // ----------------------------------------------------------
+      // 4. Authentication message
+      // ----------------------------------------------------------
 
-      const message = `Sign in to NID with handle: ${fullHandle}`;
+      const message =
+        `Sign in to NID with handle: ${fullHandle}`;
 
-      /*
-       * --------------------------------------------------------
-       * 5. Sign message
-       * --------------------------------------------------------
-       */
+      // ----------------------------------------------------------
+      // 5. Sign message
+      // ----------------------------------------------------------
 
       let signature = '';
 
       if (chain === 'solana') {
-        const encodedMessage = new TextEncoder().encode(message);
+        const encodedMessage =
+          new TextEncoder().encode(message);
 
-        const signed = await solanaProvider.signMessage(
-          encodedMessage,
-          'utf8'
-        );
+        const signed =
+          await solanaProvider.signMessage(
+            encodedMessage,
+            'utf8'
+          );
 
-        const sigBytes = signed.signature || signed;
+        const sigBytes =
+          signed.signature || signed;
 
         signature = btoa(
           String.fromCharCode(...sigBytes)
         );
       } else {
-        signature = await ethereumProvider.request({
-          method: 'personal_sign',
-          params: [message, address],
-        });
+        signature =
+          await ethereumProvider.request({
+            method: 'personal_sign',
+            params: [
+              message,
+              address,
+            ],
+          });
       }
 
+      // ==========================================================
+      // 6. IN-HOUSE AUTHENTICATION
+      // ==========================================================
+
       /*
-       * --------------------------------------------------------
-       * 6. Normal NID wallet authentication
-       * --------------------------------------------------------
+       * This endpoint is ONLY for NID's own application.
+       *
+       * Backend:
+       *
+       * wallet signature
+       *       ↓
+       * AuthenticateInHouse()
+       *       ↓
+       * internal session token
+       *       ↓
+       * nid_token HttpOnly cookie
        */
 
-      const response = await authApi.walletLogin({
-        handle: cleanHandle,
-        address,
-        chain,
-        message,
-        signature,
-      });
+      const response =
+        await authApi.walletLogin({
+          handle: cleanHandle,
+          address,
+          chain,
+          message,
+          signature,
+        });
 
       if (!response?.token) {
-        throw new Error('Authentication failed.');
+        throw new Error(
+          'Authentication failed.'
+        );
       }
 
       /*
-       * --------------------------------------------------------
-       * 7. Store NID session (Optional backup: Cookie is set via HTTP header)
-       * --------------------------------------------------------
+       * IMPORTANT:
+       *
+       * Backend should already set:
+       *
+       * Set-Cookie: nid_token=...
+       *
+       * Because your apiClient uses:
+       *
+       * credentials: 'include'
+       *
+       * We don't need localStorage for the session.
        */
 
-      localStorage.setItem('nid_token', response.token);
-
-      /*
-       * ========================================================
-       * 8. OAuth / OIDC FLOW
-       * ========================================================
-       */
+      // ==========================================================
+      // 7. OIDC FLOW
+      // ==========================================================
 
       if (isOAuthLogin) {
-        const params = new URLSearchParams();
+        /*
+         * We have successfully authenticated the user
+         * with NID.
+         *
+         * Now continue the OAuth authorization request.
+         *
+         * IMPORTANT:
+         *
+         * Do NOT generate/store the OIDC ID token here.
+         *
+         * Backend's /oauth/authorize endpoint handles
+         * authorization-code generation.
+         */
 
-        params.set('client_id', oauthParams.client_id);
-        params.set('redirect_uri', oauthParams.redirect_uri);
+        if (!oauthParams.client_id) {
+          throw new Error(
+            'OAuth client_id is missing.'
+          );
+        }
+
+        if (!oauthParams.redirect_uri) {
+          throw new Error(
+            'OAuth redirect_uri is missing.'
+          );
+        }
+
+        const params =
+          new URLSearchParams();
+
+        params.set(
+          'client_id',
+          oauthParams.client_id
+        );
+
+        params.set(
+          'redirect_uri',
+          oauthParams.redirect_uri
+        );
+
         params.set(
           'response_type',
           oauthParams.response_type
         );
-        params.set('scope', oauthParams.scope);
+
+        params.set(
+          'scope',
+          oauthParams.scope
+        );
 
         if (oauthParams.state) {
-          params.set('state', oauthParams.state);
+          params.set(
+            'state',
+            oauthParams.state
+          );
         }
 
         if (oauthParams.nonce) {
-          params.set('nonce', oauthParams.nonce);
+          params.set(
+            'nonce',
+            oauthParams.nonce
+          );
         }
 
         if (oauthParams.code_challenge) {
@@ -212,12 +285,22 @@ export function Login() {
           );
         }
 
-        if (oauthParams.code_challenge_method) {
+        if (
+          oauthParams.code_challenge_method
+        ) {
           params.set(
             'code_challenge_method',
             oauthParams.code_challenge_method
           );
         }
+
+        /*
+         * Browser navigates to NID's authorization
+         * endpoint.
+         *
+         * Backend sees nid_token cookie and knows
+         * which NID user is authenticated.
+         */
 
         window.location.href =
           `/oauth/authorize?${params.toString()}`;
@@ -225,15 +308,16 @@ export function Login() {
         return;
       }
 
-      /*
-       * --------------------------------------------------------
-       * 9. Normal NID login
-       * --------------------------------------------------------
-       */
+      // ==========================================================
+      // 8. NORMAL IN-HOUSE LOGIN
+      // ==========================================================
 
       navigate('/dashboard');
     } catch (err: any) {
-      console.error('Wallet login failed:', err);
+      console.error(
+        'Wallet login failed:',
+        err
+      );
 
       setError(
         err?.message ||
@@ -244,54 +328,57 @@ export function Login() {
     }
   };
 
-  /*
-   * ============================================================
-   * DEMO LOGIN
-   * ============================================================
-   */
+  // ============================================================
+  // DEMO LOGIN
+  // ============================================================
 
   const handleDemo = async () => {
+    if (isOAuthLogin) {
+      setError(
+        'Demo login cannot be used for Sign in with NID.'
+      );
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
-      const res = await authApi.demoLogin();
+      const response =
+        await authApi.demoLogin();
 
-      if (res?.token) {
-        localStorage.setItem('nid_token', res.token);
-      }
-
-      demoLogin();
-
-      if (isOAuthLogin) {
+      if (!response?.token) {
         throw new Error(
-          'Demo login cannot be used for Sign in with NID.'
+          'Demo authentication failed.'
         );
       }
+
+      /*
+       * Demo session should also be set by backend
+       * as an HttpOnly cookie.
+       */
+
+      demoLogin();
 
       navigate('/dashboard');
     } catch (err: any) {
-      if (isOAuthLogin) {
-        setError(
-          err?.message ||
-          'Demo login cannot be used for Sign in with NID.'
-        );
+      console.error(
+        'Demo login failed:',
+        err
+      );
 
-        return;
-      }
-
-      demoLogin();
-      navigate('/dashboard');
+      setError(
+        err?.message ||
+        'Demo login failed.'
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  /*
-   * ============================================================
-   * UI
-   * ============================================================
-   */
+  // ============================================================
+  // UI
+  // ============================================================
 
   return (
     <div className="min-h-screen bg-ink-950 grid-bg flex items-center justify-center p-6 text-ink-100">
@@ -299,9 +386,17 @@ export function Login() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-600/10 rounded-full blur-[120px]" />
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        initial={{
+          opacity: 0,
+          y: 20,
+        }}
+        animate={{
+          opacity: 1,
+          y: 0,
+        }}
+        transition={{
+          duration: 0.5,
+        }}
         className="relative w-full max-w-md"
       >
 
@@ -325,6 +420,7 @@ export function Login() {
           <div className="flex items-center justify-between mb-6">
 
             <div>
+
               <h1 className="text-xl font-semibold text-ink-50">
                 {isOAuthLogin
                   ? 'Sign in with NID'
@@ -336,16 +432,20 @@ export function Login() {
                   Continue securely with your NID identity
                 </p>
               )}
+
             </div>
 
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border border-brand-500/20 bg-brand-500/10 text-brand-400">
+
               <ShieldCheck className="w-3.5 h-3.5" />
+
               Web3 Secure
+
             </span>
 
           </div>
 
-          {/* OAuth information */}
+          {/* OAuth Application */}
 
           {isOAuthLogin && (
             <div className="mb-5 rounded-lg border border-brand-500/20 bg-brand-500/5 px-4 py-3">
@@ -361,7 +461,7 @@ export function Login() {
             </div>
           )}
 
-          {/* Login form */}
+          {/* Login Form */}
 
           <form
             onSubmit={handleWalletSignIn}
@@ -435,7 +535,9 @@ export function Login() {
 
               {loading ? (
                 <motion.div
-                  animate={{ rotate: 360 }}
+                  animate={{
+                    rotate: 360,
+                  }}
                   transition={{
                     duration: 1,
                     repeat: Infinity,
@@ -457,7 +559,7 @@ export function Login() {
 
           </form>
 
-          {/* Demo */}
+          {/* Demo Login */}
 
           {!isOAuthLogin && (
             <>
