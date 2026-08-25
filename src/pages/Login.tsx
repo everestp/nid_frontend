@@ -29,17 +29,6 @@ export function Login() {
    * ============================================================
    * OAuth / OIDC CONTEXT
    * ============================================================
-   *
-   * When a third-party website sends the user to:
-   *
-   * https://nid.xyz/oauth/authorize?...
-   *
-   * your backend may redirect the user here:
-   *
-   * https://nid.xyz/login?oauth=1&client_id=...&...
-   *
-   * We preserve those parameters and send them back to the
-   * backend after successful wallet authentication.
    */
 
   const isOAuthLogin = searchParams.get('oauth') === '1';
@@ -146,10 +135,6 @@ export function Login() {
       let signature = '';
 
       if (chain === 'solana') {
-        /*
-         * Phantom signs raw UTF-8 bytes.
-         */
-
         const encodedMessage = new TextEncoder().encode(message);
 
         const signed = await solanaProvider.signMessage(
@@ -159,20 +144,10 @@ export function Login() {
 
         const sigBytes = signed.signature || signed;
 
-        /*
-         * Uint8Array -> Base64
-         *
-         * This matches your backend Solana verification.
-         */
-
         signature = btoa(
           String.fromCharCode(...sigBytes)
         );
       } else {
-        /*
-         * MetaMask / EVM personal_sign
-         */
-
         signature = await ethereumProvider.request({
           method: 'personal_sign',
           params: [message, address],
@@ -184,14 +159,6 @@ export function Login() {
        * 6. Normal NID wallet authentication
        * --------------------------------------------------------
        */
-
-      console.log('Wallet login:', {
-        handle: fullHandle,
-        address,
-        chain,
-        message,
-        signature,
-      });
 
       const response = await authApi.walletLogin({
         handle: cleanHandle,
@@ -207,7 +174,7 @@ export function Login() {
 
       /*
        * --------------------------------------------------------
-       * 7. Store NID session
+       * 7. Store NID session (Optional backup: Cookie is set via HTTP header)
        * --------------------------------------------------------
        */
 
@@ -217,30 +184,9 @@ export function Login() {
        * ========================================================
        * 8. OAuth / OIDC FLOW
        * ========================================================
-       *
-       * If this login came from a third-party application,
-       * DON'T simply navigate to /dashboard.
-       *
-       * Instead continue the OAuth authorization flow.
        */
 
       if (isOAuthLogin) {
-        /*
-         * We now have an authenticated NID session.
-         *
-         * Send the browser back to the NID OAuth authorize
-         * endpoint.
-         *
-         * The backend will:
-         *
-         * 1. Verify the NID session
-         * 2. Validate client_id
-         * 3. Validate redirect_uri
-         * 4. Validate OAuth parameters
-         * 5. Generate authorization code
-         * 6. Redirect to the third-party application
-         */
-
         const params = new URLSearchParams();
 
         params.set('client_id', oauthParams.client_id);
@@ -272,10 +218,6 @@ export function Login() {
             oauthParams.code_challenge_method
           );
         }
-
-        /*
-         * Continue OAuth flow.
-         */
 
         window.location.href =
           `/oauth/authorize?${params.toString()}`;
@@ -321,13 +263,6 @@ export function Login() {
 
       demoLogin();
 
-      /*
-       * Don't allow demo login to automatically authenticate
-       * an OAuth client.
-       *
-       * OAuth should require real wallet authentication.
-       */
-
       if (isOAuthLogin) {
         throw new Error(
           'Demo login cannot be used for Sign in with NID.'
@@ -344,10 +279,6 @@ export function Login() {
 
         return;
       }
-
-      /*
-       * Existing local demo fallback.
-       */
 
       demoLogin();
       navigate('/dashboard');

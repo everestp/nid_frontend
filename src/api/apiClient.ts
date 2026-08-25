@@ -3,17 +3,15 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081/api/v1';
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const token = localStorage.getItem('nid_token'); // Or wherever you store your session token
-
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     ...options.headers,
   };
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers,
+    credentials: 'include', // Automatically sends the cookie with the request
   });
 
   if (!response.ok) {
@@ -28,7 +26,6 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     throw new Error(errorMessage);
   }
 
-  // Handle empty responses gracefully
   const text = await response.text();
   return text ? JSON.parse(text) : ({} as T);
 }
