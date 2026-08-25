@@ -1,0 +1,20 @@
+claude bro i need full size view just  like linked  github userProgile view best design use real lucid react icon  liek for btc use btc icon for discord use doscord icon and  make the best and best bro  total platform
+
+```typescriptreact
+const allPlatforms = [
+  'twitter',
+  'discord',
+  'github',
+  'telegram',
+  'farcaster',
+  'email',
+  'phone',
+  'website',
+  'instagram',
+  'facebook',
+  'linkedin',
+  'tiktok',
+  'reddit',
+  'youtube',
+];   and also use  crytpo icon also for wallet i need fullpage view bro best of best
+```

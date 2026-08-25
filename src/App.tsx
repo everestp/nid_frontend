@@ -31,19 +31,11 @@ import { SocialDirectory } from "@/pages/dashboard/SocialDirectory";
 import OAuthAuthorize from "@/pages/OAuthAuthorize";
 
 import type { ReactNode } from "react";
+import UserProfilePageWrapper from "./pages/UserProfilePageWrapper";
 
 /*
  * ============================================================
- * Internal NID authentication
- * ============================================================
- *
- * This protects the NID dashboard only.
- *
- * IMPORTANT:
- *
- * /oauth/authorize is NOT protected by this.
- *
- * OAuth has its own authentication flow.
+ * Protected Dashboard Route
  * ============================================================
  */
 
@@ -72,7 +64,7 @@ function AppRoutes() {
     <Routes>
 
       {/* ======================================================
-          Public NID pages
+          Public Landing Page
           ====================================================== */}
 
       <Route
@@ -80,22 +72,34 @@ function AppRoutes() {
         element={<Landing />}
       />
 
-      {/* Internal NID login */}
+      {/* ======================================================
+          Public User Profile
+
+          Example:
+          /everest
+          /john
+          /alice
+          ====================================================== */}
+
+      <Route
+        path="/:handle"
+        element={<UserProfilePageWrapper />}
+      />
+
+      {/* ======================================================
+          Internal NID Login
+          ====================================================== */}
+
       <Route
         path="/login"
         element={<Login />}
       />
 
       {/* ======================================================
-          OAuth / External authentication
-          ======================================================
+          OAuth Authorization
 
-          DO NOT put ProtectedRoute here.
-
-          A third-party application can enter this route
-          even when the NID user is not internally logged in.
-
-          OAuthAuthorize handles the OAuth authentication flow.
+          IMPORTANT:
+          This route is NOT protected by ProtectedRoute.
           ====================================================== */}
 
       <Route
@@ -104,7 +108,7 @@ function AppRoutes() {
       />
 
       {/* ======================================================
-          NID Dashboard
+          Protected Dashboard
           ====================================================== */}
 
       <Route
@@ -187,7 +191,7 @@ function AppRoutes() {
       </Route>
 
       {/* ======================================================
-          Unknown route
+          Unknown Route
           ====================================================== */}
 
       <Route

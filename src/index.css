@@ -4,69 +4,641 @@
 @tailwind components;
 @tailwind utilities;
 
+
+/* =========================================================
+   DESIGN TOKENS
+========================================================= */
+
+:root {
+  --nid-dark-bg: #070914;
+  --nid-dark-surface: #0b1020;
+  --nid-dark-card: #0f1528;
+
+  --nid-light-bg: #f7f8fc;
+  --nid-light-surface: #ffffff;
+  --nid-light-card: #ffffff;
+
+  --nid-brand: #6366f1;
+  --nid-brand-light: #818cf8;
+  --nid-brand-dark: #4f46e5;
+
+  --nid-border-dark: rgba(148, 163, 184, 0.12);
+  --nid-border-light: rgba(15, 23, 42, 0.09);
+}
+
+
+/* =========================================================
+   BASE
+========================================================= */
+
 @layer base {
+
   * {
     @apply border-ink-700;
   }
 
+  html {
+    background: var(--nid-dark-bg);
+
+    transition:
+      background-color 220ms ease,
+      color 220ms ease;
+  }
+
   body {
-    @apply bg-ink-950 text-ink-100 font-sans antialiased;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    @apply font-sans antialiased;
+
+    background:
+      radial-gradient(
+        circle at 50% -20%,
+        rgba(99, 102, 241, 0.07),
+        transparent 38%
+      ),
+      var(--nid-dark-bg);
+
+    color: #e2e8f0;
+
+    font-feature-settings:
+      'cv02',
+      'cv03',
+      'cv04',
+      'cv11';
+
+    transition:
+      background-color 220ms ease,
+      color 220ms ease;
   }
 
   ::selection {
-    @apply bg-brand-500/30 text-white;
+    background: rgba(99, 102, 241, 0.28);
+    color: #ffffff;
   }
 
-  /* Custom scrollbar */
+  /* Scrollbar */
+
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-transparent;
+    background: transparent;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-ink-600 rounded-full;
+    background: #272d42;
+    border-radius: 999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-ink-500;
+    background: #3b435d;
   }
 }
 
+
+/* =========================================================
+   COMPONENTS
+========================================================= */
+
 @layer components {
+
+  /* =======================================================
+     GLASS
+  ======================================================== */
+
   .glass {
-    @apply bg-ink-900/50 backdrop-blur-md border border-ink-700;
+    @apply backdrop-blur-xl;
+
+    background: rgba(11, 16, 32, 0.62);
+
+    border: 1px solid var(--nid-border-dark);
+
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.025),
+      0 8px 32px rgba(0, 0, 0, 0.16);
+
+    transition:
+      background-color 220ms ease,
+      border-color 220ms ease,
+      box-shadow 220ms ease;
   }
+
 
   .glass-hover {
-    @apply transition-all duration-200 hover:border-ink-600 hover:bg-ink-800/50;
+    @apply transition-all duration-200;
+
+    &:hover {
+      background: rgba(15, 21, 40, 0.78);
+      border-color: rgba(129, 140, 248, 0.20);
+
+      box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.20),
+        0 0 30px rgba(99, 102, 241, 0.05);
+    }
   }
+
+
+  /* =======================================================
+     CARD
+  ======================================================== */
 
   .card-surface {
-    @apply bg-ink-850/80 border border-ink-700 rounded-xl backdrop-blur-sm;
+    @apply backdrop-blur-sm rounded-2xl;
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(17, 24, 39, 0.96),
+        rgba(10, 15, 30, 0.96)
+      );
+
+    border: 1px solid rgba(148, 163, 184, 0.13);
+
+    box-shadow:
+      0 20px 60px rgba(0, 0, 0, 0.28),
+      0 2px 8px rgba(0, 0, 0, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.025);
+
+    transition:
+      background-color 220ms ease,
+      border-color 220ms ease,
+      box-shadow 220ms ease;
   }
 
+
+  /* =======================================================
+     GRADIENT TEXT
+  ======================================================== */
+
   .gradient-text {
-    @apply bg-gradient-to-r from-white via-ink-50 to-ink-200 bg-clip-text text-transparent;
+    background:
+      linear-gradient(
+        100deg,
+        #ffffff 0%,
+        #c7d2fe 38%,
+        #818cf8 72%,
+        #a78bfa 100%
+      );
+
+    background-clip: text;
+    -webkit-background-clip: text;
+
+    color: transparent;
   }
+
+
+  /* =======================================================
+     GRID
+  ======================================================== */
 
   .grid-bg {
     background-image:
-      linear-gradient(to right, rgba(63, 63, 70, 0.15) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(63, 63, 70, 0.15) 1px, transparent 1px);
+      linear-gradient(
+        to right,
+        rgba(99, 102, 241, 0.055) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        rgba(99, 102, 241, 0.055) 1px,
+        transparent 1px
+      );
+
     background-size: 48px 48px;
   }
 
+
+  /* =======================================================
+     BRAND GLOW
+  ======================================================== */
+
   .glow-brand {
-    box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.1), 0 0 40px -10px rgba(99, 102, 241, 0.3);
+    box-shadow:
+      0 0 0 1px rgba(99, 102, 241, 0.16),
+      0 0 50px -12px rgba(99, 102, 241, 0.50);
   }
 
+
+  /* =======================================================
+     SHIMMER
+  ======================================================== */
+
   .shimmer-bg {
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.04), transparent);
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.045),
+        transparent
+      );
+
     background-size: 200% 100%;
+  }
+
+
+  /* =======================================================
+     THEME TRANSITION
+  ======================================================== */
+
+  .theme-transition,
+  .theme-transition * {
+    transition:
+      background-color 220ms ease,
+      border-color 220ms ease,
+      color 220ms ease,
+      box-shadow 220ms ease;
+  }
+}
+
+
+/* =========================================================
+   LIGHT MODE
+========================================================= */
+
+html.light {
+
+  color-scheme: light;
+
+  background: #f7f8fc;
+}
+
+
+/* =========================================================
+   LIGHT BODY
+========================================================= */
+
+html.light body {
+
+  background:
+    radial-gradient(
+      circle at 50% -20%,
+      rgba(99, 102, 241, 0.055),
+      transparent 36%
+    ),
+    linear-gradient(
+      180deg,
+      #fafbff 0%,
+      #f7f8fc 45%,
+      #f5f7fb 100%
+    );
+
+  color: #172033;
+}
+
+
+/* =========================================================
+   LIGHT — BACKGROUNDS
+========================================================= */
+
+html.light .bg-ink-950 {
+  background-color: #f7f8fc !important;
+}
+
+html.light .bg-ink-900 {
+  background-color: #ffffff !important;
+}
+
+html.light .bg-ink-900\/80 {
+  background-color: rgba(255, 255, 255, 0.90) !important;
+}
+
+html.light .bg-ink-900\/50 {
+  background-color: rgba(255, 255, 255, 0.72) !important;
+}
+
+html.light .bg-ink-850\/80,
+html.light .bg-ink-850\/90 {
+  background-color: rgba(255, 255, 255, 0.94) !important;
+}
+
+html.light .bg-ink-800 {
+  background-color: #eef1f7 !important;
+}
+
+html.light .bg-ink-800\/80 {
+  background-color: rgba(238, 241, 247, 0.88) !important;
+}
+
+html.light .bg-ink-800\/50 {
+  background-color: rgba(238, 241, 247, 0.68) !important;
+}
+
+html.light .bg-ink-800\/30 {
+  background-color: rgba(238, 241, 247, 0.45) !important;
+}
+
+
+/* =========================================================
+   LIGHT — BORDERS
+========================================================= */
+
+html.light .border-ink-800 {
+  border-color: #e5e9f2 !important;
+}
+
+html.light .border-ink-700 {
+  border-color: #dce2ed !important;
+}
+
+html.light .border-ink-600 {
+  border-color: #c8d0df !important;
+}
+
+
+/* =========================================================
+   LIGHT — TEXT
+========================================================= */
+
+html.light .text-ink-50 {
+  color: #111827 !important;
+}
+
+html.light .text-ink-100 {
+  color: #1f2937 !important;
+}
+
+html.light .text-ink-200 {
+  color: #334155 !important;
+}
+
+html.light .text-ink-300 {
+  color: #475569 !important;
+}
+
+html.light .text-ink-400 {
+  color: #64748b !important;
+}
+
+html.light .text-ink-500 {
+  color: #94a3b8 !important;
+}
+
+
+/* =========================================================
+   LIGHT — HOVER
+========================================================= */
+
+html.light .hover\:bg-ink-900:hover {
+  background-color: #f8faff !important;
+}
+
+html.light .hover\:bg-ink-800:hover {
+  background-color: #e8ecf4 !important;
+}
+
+html.light .hover\:bg-ink-800\/50:hover {
+  background-color: rgba(226, 232, 240, 0.68) !important;
+}
+
+html.light .hover\:border-ink-600:hover {
+  border-color: #aeb9ca !important;
+}
+
+
+/* =========================================================
+   LIGHT — INPUTS
+========================================================= */
+
+html.light input,
+html.light textarea,
+html.light select {
+
+  color: #172033;
+
+  background-color: rgba(255, 255, 255, 0.82);
+
+  color-scheme: light;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+
+  color: #94a3b8;
+}
+
+html.light input:focus,
+html.light textarea:focus,
+html.light select:focus {
+
+  border-color: rgba(99, 102, 241, 0.65);
+
+  box-shadow:
+    0 0 0 3px rgba(99, 102, 241, 0.08);
+}
+
+
+/* =========================================================
+   LIGHT — CARDS
+========================================================= */
+
+html.light .card-surface {
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.98),
+      rgba(249, 250, 253, 0.98)
+    ) !important;
+
+  border-color: rgba(15, 23, 42, 0.085) !important;
+
+  box-shadow:
+    0 20px 50px rgba(15, 23, 42, 0.07),
+    0 4px 12px rgba(15, 23, 42, 0.035),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+
+/* =========================================================
+   LIGHT — GLASS
+========================================================= */
+
+html.light .glass {
+
+  background: rgba(255, 255, 255, 0.70) !important;
+
+  border-color: rgba(15, 23, 42, 0.085) !important;
+
+  backdrop-filter: blur(20px);
+
+  box-shadow:
+    0 8px 30px rgba(15, 23, 42, 0.045),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+
+html.light .glass-hover:hover {
+
+  background: rgba(255, 255, 255, 0.90);
+
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+
+/* =========================================================
+   LIGHT — GRADIENT TEXT
+========================================================= */
+
+html.light .gradient-text {
+
+  background:
+    linear-gradient(
+      100deg,
+      #111827 0%,
+      #334155 38%,
+      #4f46e5 72%,
+      #7c3aed 100%
+    );
+
+  background-clip: text;
+  -webkit-background-clip: text;
+
+  color: transparent;
+}
+
+
+/* =========================================================
+   LIGHT — GRID
+========================================================= */
+
+html.light .grid-bg {
+
+  background-image:
+    linear-gradient(
+      to right,
+      rgba(79, 70, 229, 0.055) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(79, 70, 229, 0.055) 1px,
+      transparent 1px
+    );
+}
+
+
+/* =========================================================
+   LIGHT — BRAND GLOW
+========================================================= */
+
+html.light .glow-brand {
+
+  box-shadow:
+    0 0 0 1px rgba(99, 102, 241, 0.10),
+    0 0 45px -15px rgba(99, 102, 241, 0.28);
+}
+
+
+/* =========================================================
+   LIGHT — SHIMMER
+========================================================= */
+
+html.light .shimmer-bg {
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(99, 102, 241, 0.035),
+      transparent
+    );
+
+  background-size: 200% 100%;
+}
+
+
+/* =========================================================
+   LIGHT — SCROLLBAR
+========================================================= */
+
+html.light ::-webkit-scrollbar-track {
+
+  background: #f7f8fc;
+}
+
+html.light ::-webkit-scrollbar-thumb {
+
+  background: #cbd3e1;
+}
+
+html.light ::-webkit-scrollbar-thumb:hover {
+
+  background: #aeb9ca;
+}
+
+
+/* =========================================================
+   LIGHT — SELECTION
+========================================================= */
+
+html.light ::selection {
+
+  background: rgba(79, 70, 229, 0.16);
+
+  color: #111827;
+}
+
+
+/* =========================================================
+   LIGHT — BRAND ELEMENTS
+========================================================= */
+
+html.light .bg-brand-600 {
+  background-color: #4f46e5;
+}
+
+html.light .hover\:bg-brand-500:hover {
+  background-color: #6366f1;
+}
+
+html.light .border-brand-500\/50 {
+  border-color: rgba(99, 102, 241, 0.38);
+}
+
+
+/* =========================================================
+   LIGHT — SUCCESS
+========================================================= */
+
+html.light .text-success-400 {
+  color: #16a34a !important;
+}
+
+
+/* =========================================================
+   LIGHT — WARNING
+========================================================= */
+
+html.light .text-warning-400 {
+  color: #d97706 !important;
+}
+
+
+/* =========================================================
+   LIGHT — DANGER
+========================================================= */
+
+html.light .text-danger-400 {
+  color: #dc2626 !important;
+}
+
+
+/* =========================================================
+   REDUCE MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+
+    animation-duration: 0.01ms !important;
+
+    animation-iteration-count: 1 !important;
+
+    transition-duration: 0.01ms !important;
+
+    scroll-behavior: auto !important;
   }
 }
