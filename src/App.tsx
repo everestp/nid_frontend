@@ -32,6 +32,7 @@ import OAuthAuthorize from "@/pages/OAuthAuthorize";
 
 import type { ReactNode } from "react";
 import UserProfilePageWrapper from "./pages/UserProfilePageWrapper";
+import Docs from "./pages/Docs";
 
 /*
  * ============================================================
@@ -70,6 +71,10 @@ function AppRoutes() {
       <Route
         path="/"
         element={<Landing />}
+      />
+      <Route
+        path="/docs"
+        element={<Docs />}
       />
 
       {/* ======================================================

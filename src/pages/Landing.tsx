@@ -366,7 +366,6 @@ export function Landing() {
       {/* ======================================================
           NAVBAR
       ======================================================= */}
-
       <motion.nav
         initial={{
           y: -80,
@@ -381,20 +380,18 @@ export function Landing() {
           ease: [0.22, 1, 0.36, 1],
         }}
         className="
-          fixed
-          top-0
-          left-0
-          right-0
-          z-50
-          border-b
-          border-ink-800/50
-          bg-ink-950/70
-          backdrop-blur-2xl
-          theme-transition
-        "
+    fixed
+    top-0
+    left-0
+    right-0
+    z-50
+    glass
+    theme-transition
+  "
       >
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
 
+          {/* Logo */}
           <motion.div
             whileHover={{
               scale: 1.03,
@@ -408,7 +405,7 @@ export function Landing() {
             <Logo size={36} />
           </motion.div>
 
-          {/* Navigation */}
+          {/* Navigation Links */}
           <div className="hidden md:flex items-center gap-8 text-sm text-ink-300">
             {[
               ['Features', '#features'],
@@ -420,36 +417,35 @@ export function Landing() {
                 href={href}
                 whileHover={{ y: -1 }}
                 className="
-        relative
-        group
-        hover:text-ink-50
-        transition-colors
-      "
+            relative
+            group
+            hover:text-ink-50
+            transition-colors
+          "
               >
                 {label}
 
                 <span
                   className="
-          absolute
-          left-0
-          -bottom-1
-          h-px
-          w-0
-          bg-[var(--nid-brand)]
-          group-hover:w-full
-          transition-all
-          duration-300
-        "
+              absolute
+              left-0
+              -bottom-1
+              h-px
+              w-0
+              bg-[var(--nid-brand)]
+              group-hover:w-full
+              transition-all
+              duration-300
+            "
                 />
               </motion.a>
             ))}
           </div>
+
           {/* Actions */}
+          <div className="flex items-center gap-3">
 
-          <div className="flex items-center gap-2">
-
-            {/* Theme */}
-
+            {/* Theme Toggle Button */}
             <motion.button
               type="button"
               onClick={toggleTheme}
@@ -466,22 +462,22 @@ export function Landing() {
                   : 'Switch to dark mode'
               }
               className="
-                relative
-                w-9
-                h-9
-                rounded-lg
-                border
-                border-ink-700
-                bg-ink-800/50
-                hover:bg-ink-800
-                flex
-                items-center
-                justify-center
-                text-ink-300
-                hover:text-ink-50
-                transition-all
-                overflow-hidden
-              "
+          relative
+          w-9
+          h-9
+          rounded-lg
+          border
+          border-ink-700
+          bg-ink-800/50
+          hover:bg-ink-800
+          flex
+          items-center
+          justify-center
+          text-ink-300
+          hover:text-ink-50
+          transition-all
+          overflow-hidden
+        "
             >
               <AnimatePresence mode="wait" initial={false}>
                 {isDark ? (
@@ -530,8 +526,7 @@ export function Landing() {
               </AnimatePresence>
             </motion.button>
 
-            {/* Authenticated user */}
-
+            {/* Authenticated Actions */}
             {isAuthenticated ? (
               <motion.button
                 onClick={goToDashboard}
@@ -543,24 +538,23 @@ export function Landing() {
                   scale: 0.97,
                 }}
                 className="
-                  group
-                  flex
-                  items-center
-                  gap-2
-                  text-sm
-                  font-medium
-                  text-white
-                  bg-brand-600
-                  hover:bg-brand-500
-                  px-4
-                  py-2
-                  rounded-lg
-                  transition-all
-                  border
-                  border-brand-500/50
-                  shadow-lg
-                  shadow-brand-900/20
-                "
+            group
+            flex
+            items-center
+            gap-2
+            text-sm
+            font-medium
+            text-slate-950
+            bg-[var(--nid-brand)]
+            hover:bg-[var(--nid-brand-light)]
+            px-4
+            py-2
+            rounded-lg
+            transition-all
+            border
+            border-[var(--nid-brand-light)]/40
+            glow-brand
+          "
               >
                 <span>
                   Go to Dashboard
@@ -568,11 +562,11 @@ export function Landing() {
 
                 <ArrowRight
                   className="
-                    w-4
-                    h-4
-                    transition-transform
-                    group-hover:translate-x-1
-                  "
+              w-4
+              h-4
+              transition-transform
+              group-hover:translate-x-1
+            "
                 />
               </motion.button>
             ) : (
@@ -586,13 +580,14 @@ export function Landing() {
                     scale: 0.97,
                   }}
                   className="
-                    text-sm
-                    text-ink-200
-                    hover:text-ink-50
-                    transition-colors
-                    px-4
-                    py-2
-                  "
+              text-sm
+              font-medium
+              text-ink-300
+              hover:text-ink-50
+              transition-colors
+              px-3
+              py-2
+            "
                 >
                   Sign in
                 </motion.button>
@@ -607,24 +602,23 @@ export function Landing() {
                     scale: 0.97,
                   }}
                   className="
-                    hidden
-                    sm:flex
-                    items-center
-                    gap-2
-                    text-sm
-                    font-medium
-                    text-white
-                    bg-brand-600
-                    hover:bg-brand-500
-                    px-4
-                    py-2
-                    rounded-lg
-                    transition-all
-                    border
-                    border-brand-500/50
-                    shadow-lg
-                    shadow-brand-900/20
-                  "
+              hidden
+              sm:flex
+              items-center
+              gap-2
+              text-sm
+              font-semibold
+              text-slate-950
+              bg-[var(--nid-brand)]
+              hover:bg-[var(--nid-brand-light)]
+              px-4
+              py-2
+              rounded-lg
+              transition-all
+              border
+              border-[var(--nid-brand-light)]/40
+              glow-brand
+            "
                 >
                   Get started
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -634,7 +628,6 @@ export function Landing() {
           </div>
         </div>
       </motion.nav>
-
       {/* ======================================================
           HERO
       ======================================================= */}
@@ -655,47 +648,6 @@ export function Landing() {
 
               {/* Badge */}
 
-              <motion.div
-                initial={{
-                  opacity: 0,
-                  y: 10,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                transition={{
-                  delay: 0.2,
-                }}
-                className="
-                  inline-flex
-                  items-center
-                  gap-2
-                  px-3
-                  py-1.5
-                  rounded-full
-                  border
-                  border-brand-500/20
-                  bg-brand-500/5
-                  text-xs
-                  text-brand-300
-                  mb-7
-                "
-              >
-                <motion.span
-                  animate={{
-                    rotate: [0, 10, -10, 0],
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                  }}
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                </motion.span>
-
-                The identity layer for Web3
-              </motion.div>
 
               {/* Heading */}
 
@@ -801,7 +753,7 @@ export function Landing() {
                 </motion.button>
 
                 <motion.a
-                  href="#features"
+                  href="/docs"
                   whileHover={{
                     y: -3,
                   }}
@@ -826,7 +778,7 @@ export function Landing() {
                     transition-all
                   "
                 >
-                  Explore protocol
+                 Docs
                   <ChevronRight className="w-4 h-4" />
                 </motion.a>
               </div>
@@ -1803,7 +1755,7 @@ export function Landing() {
       {/* ======================================================
           CTA
       ======================================================= */}
-
+{/*
       <section className="relative py-28 px-6 border-t border-ink-800/50">
 
         <div className="max-w-4xl mx-auto text-center">
@@ -1917,7 +1869,7 @@ export function Landing() {
             </div>
           </motion.div>
         </div>
-      </section>
+      </section> */}
 
       {/* ======================================================
           FOOTER
