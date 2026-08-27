@@ -79,9 +79,7 @@ export default function OAuthAuthorize() {
 
   useEffect(() => {
     const fetchClientDetails = async () => {
-      if (!oauth.clientId) {
-        return;
-      }
+      if (!oauth.clientId) return;
 
       try {
         const response = await fetch(
@@ -90,7 +88,19 @@ export default function OAuthAuthorize() {
           )}`
         );
 
+        if (response.status === 404) {
+          console.warn(
+            "OAuth client not found:",
+            oauth.clientId
+          );
+          return;
+        }
+
         if (!response.ok) {
+          console.error(
+            "Failed to fetch OAuth client:",
+            response.status
+          );
           return;
         }
 
