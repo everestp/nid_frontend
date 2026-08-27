@@ -18,7 +18,7 @@ import { Logo } from "@/components/Logo";
 import { authApi } from "@/api/authApi";
 
 const NID_BACKEND =
-  import.meta.env.VITE_NID_BACKEND || "http://localhost:8081";
+  import.meta.env.VITE_NID_BACKEND || "https://api.nid.xyz";
 
 interface OAuthRequest {
   clientId: string;

@@ -1,40 +1,16 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 /* ============================================================
-   NID Docs — OAuth 2.0 + OpenID Connect Identity Provider
-   Single-file documentation surface. Built on the existing
-   design tokens (glass, card-surface, gradient-text, grid-bg,
-   ink-* / brand-* / success-warning-danger-* utility classes).
+   NID Docs — @nid/react SDK
+   No-backend OAuth 2.0 + OIDC integration. Single-file docs
+   surface built on the existing design tokens (glass,
+   card-surface, gradient-text, grid-bg, ink, brand, and
+   success/warning/danger utility classes).
 ============================================================ */
 
 /* ------------------------------------------------------------
    Small building blocks
 ------------------------------------------------------------ */
-
-type Method = "GET" | "POST" | "DELETE";
-
-function MethodBadge({ method }: { method: Method }) {
-  const styles: Record<Method, string> = {
-    GET: "bg-brand-600/15 text-brand-light border-brand-500/50",
-    POST: "bg-success-400/10 text-success-400 border-success-400/30",
-    DELETE: "bg-danger-400/10 text-danger-400 border-danger-400/30",
-  };
-  return (
-    <span
-      className={`inline-flex items-center rounded-md border px-2 py-0.5 font-mono text-[11px] font-semibold tracking-wide ${styles[method]}`}
-    >
-      {method}
-    </span>
-  );
-}
-
-function Pill({ children }: { children: ReactNode }) {
-  return (
-    <span className="inline-flex items-center rounded-full border border-ink-700 bg-ink-800/50 px-2.5 py-0.5 text-xs text-ink-300">
-      {children}
-    </span>
-  );
-}
 
 function SectionHeading({
   eyebrow,
@@ -206,10 +182,9 @@ function Table({
 type Category =
   | "Getting Started"
   | "Core Concepts"
-  | "Integration Guides"
-  | "API Reference"
+  | "Framework Guides"
+  | "SDK Reference"
   | "Security"
-  | "Deployment"
   | "Troubleshooting";
 
 interface NavEntry {
@@ -220,519 +195,331 @@ interface NavEntry {
 }
 
 const NAV: NavEntry[] = [
-  { id: "overview", title: "Overview", category: "Getting Started", keywords: "intro nid identity provider" },
-  { id: "quickstart", title: "Quick start", category: "Getting Started", keywords: "5 minutes setup client" },
-  { id: "register-app", title: "Register an application", category: "Getting Started", keywords: "client id secret redirect uri console" },
-  { id: "env-vars", title: "Environment variables", category: "Getting Started", keywords: "env dotenv secret config" },
+  { id: "overview", title: "Overview", category: "Getting Started", keywords: "nid react sdk no backend" },
+  { id: "install", title: "Install & configure", category: "Getting Started", keywords: "npm nidprovider clientid setup" },
+  { id: "quickstart", title: "Quick start", category: "Getting Started", keywords: "login button dashboard 5 minutes" },
 
-  { id: "oauth-vs-oidc", title: "OAuth 2.0 vs OIDC", category: "Core Concepts", keywords: "difference authentication authorization" },
-  { id: "auth-code-pkce", title: "Authorization Code Flow + PKCE", category: "Core Concepts", keywords: "code verifier challenge state nonce" },
-  { id: "tokens", title: "Tokens", category: "Core Concepts", keywords: "access token id token refresh jwt" },
-  { id: "scopes", title: "Scopes & claims", category: "Core Concepts", keywords: "openid profile sub name preferred_username" },
-  { id: "sessions", title: "Sessions & cookies", category: "Core Concepts", keywords: "app_session httponly samesite jwt cookie" },
+  { id: "public-clients", title: "Public clients & PKCE", category: "Core Concepts", keywords: "no secret spa client type authorization code" },
+  { id: "session-tokens", title: "Session & token storage", category: "Core Concepts", keywords: "access token id token memory storage refresh" },
+  { id: "user-object", title: "The user object", category: "Core Concepts", keywords: "sub name preferred_username claims" },
 
-  { id: "guide-react", title: "React", category: "Integration Guides", keywords: "spa frontend vite" },
-  { id: "guide-nextjs", title: "Next.js", category: "Integration Guides", keywords: "app router route handler server" },
-  { id: "guide-vue", title: "Vue", category: "Integration Guides", keywords: "vue 3 composition api" },
-  { id: "guide-angular", title: "Angular", category: "Integration Guides", keywords: "angular service httpclient" },
-  { id: "guide-vanilla", title: "Vanilla JavaScript", category: "Integration Guides", keywords: "no framework fetch" },
-  { id: "guide-node", title: "Node.js (Express)", category: "Integration Guides", keywords: "express backend server" },
-  { id: "guide-go", title: "Go", category: "Integration Guides", keywords: "golang net/http reference backend" },
-  { id: "guide-python", title: "Python (FastAPI)", category: "Integration Guides", keywords: "fastapi flask python" },
-  { id: "guide-java", title: "Java (Spring Boot)", category: "Integration Guides", keywords: "spring boot java" },
-  { id: "guide-php", title: "PHP", category: "Integration Guides", keywords: "php curl session" },
+  { id: "guide-react", title: "React", category: "Framework Guides", keywords: "vite create-react-app spa" },
+  { id: "guide-nextjs", title: "Next.js", category: "Framework Guides", keywords: "app router client component provider" },
+  { id: "guide-angular", title: "Angular", category: "Framework Guides", keywords: "angular service standalone component" },
+  { id: "guide-other", title: "Other frameworks", category: "Framework Guides", keywords: "vue svelte vanilla rest api core" },
 
-  { id: "api-authorize", title: "GET /oauth/authorize", category: "API Reference", keywords: "authorize endpoint" },
-  { id: "api-token", title: "POST /oauth/token", category: "API Reference", keywords: "token exchange endpoint" },
-  { id: "api-userinfo", title: "GET /oauth/userinfo", category: "API Reference", keywords: "userinfo endpoint claims" },
-  { id: "api-errors", title: "Errors", category: "API Reference", keywords: "error error_description invalid_grant" },
+  { id: "ref-provider", title: "<NIDProvider>", category: "SDK Reference", keywords: "clientid props context" },
+  { id: "ref-usenid", title: "useNID()", category: "SDK Reference", keywords: "hook user isauthenticated isloading login logout" },
+  { id: "ref-loginbutton", title: "<NIDLoginButton>", category: "SDK Reference", keywords: "button styling props colors" },
 
-  { id: "security-best-practices", title: "Best practices", category: "Security", keywords: "csrf state pkce httponly secrets" },
-  { id: "security-secrets", title: "Secret management", category: "Security", keywords: "client secret jwt secret rotation vault" },
+  { id: "security-no-secrets", title: "Never ship a client secret", category: "Security", keywords: "clientsecret bundle devtools leak public client" },
+  { id: "security-redirect", title: "Redirect URI allow-list", category: "Security", keywords: "callback origin registered uri" },
+  { id: "security-logout", title: "Logout & multi-tab sessions", category: "Security", keywords: "logout storage event broadcast channel" },
 
-  { id: "deploy-checklist", title: "Production checklist", category: "Deployment", keywords: "https secure cookies cors deploy" },
-
-  { id: "troubleshooting", title: "Common issues", category: "Troubleshooting", keywords: "invalid state cors redirect_uri mismatch" },
+  { id: "troubleshooting", title: "Common issues", category: "Troubleshooting", keywords: "isauthenticated stuck loading redirect_uri cors" },
 ];
 
 const CATEGORY_ORDER: Category[] = [
   "Getting Started",
   "Core Concepts",
-  "Integration Guides",
-  "API Reference",
+  "Framework Guides",
+  "SDK Reference",
   "Security",
-  "Deployment",
   "Troubleshooting",
 ];
 
 /* ------------------------------------------------------------
-   Reusable snippet fragments (kept accurate to the reference
-   NID + Go client implementation)
+   Reusable snippet fragments
 ------------------------------------------------------------ */
 
-const ENV_EXAMPLE = `# .env  (server-side only — never shipped to the browser)
-NID_CLIENT_ID=hZnNd0BdhkOkqgPGJRBoXdfaaaAkR2LS
-NID_CLIENT_SECRET=change-me-in-nid-console
-NID_AUTHORIZE_URL=https://auth.yourdomain.com/oauth/authorize
-NID_TOKEN_URL=https://auth.yourdomain.com/oauth/token
-NID_USERINFO_URL=https://auth.yourdomain.com/oauth/userinfo
+const INSTALL_CMD = `npm install @nid/react`;
 
-APP_REDIRECT_URI=https://api.yourapp.com/oauth/callback
-APP_FRONTEND_URL=https://app.yourapp.com
+const PROVIDER_SETUP = `// src/main.tsx
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { NIDProvider } from "@nid/react";
+import "./index.css";
+import App from "./App.tsx";
 
-# 32+ random bytes, base64 — used only to sign your own session JWT
-SESSION_JWT_SECRET=<openssl rand -base64 48>`;
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <NIDProvider
+      clientId="2X85wiHX94Sng0hJ2lZhfYEQe-164JM5"
+      redirectUri="http://localhost:5173/callback"
+    >
+      <App />
+    </NIDProvider>
+  </StrictMode>,
+);`;
 
-const REACT_LOGIN_TSX = `// src/pages/Login.tsx
+const LOGIN_PAGE = `// src/pages/Login.tsx
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-const API_BASE = import.meta.env.VITE_API_BASE; // e.g. https://api.yourapp.com
+import { useNID, NIDLoginButton } from "@nid/react";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { isAuthenticated, isLoading } = useNID();
 
   useEffect(() => {
-    fetch(\`\${API_BASE}/api/me\`, { credentials: "include" })
-      .then((r) => r.ok && navigate("/dashboard"))
-      .catch(() => {});
-  }, [navigate]);
+    if (!isLoading && isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, isLoading, navigate]);
 
-  const signIn = () => {
-    window.location.href = \`\${API_BASE}/oauth/login\`;
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <p className="text-sm text-gray-400">Loading NID session...</p>
+      </div>
+    );
+  }
 
   return (
-    <button onClick={signIn} className="glow-brand rounded-xl bg-brand-600 px-5 py-3 font-semibold text-white">
-      Sign in with NID
-    </button>
+    <div className="min-h-screen flex items-center justify-center bg-black text-white px-4">
+      <div className="w-full max-w-md rounded-2xl border border-gray-800 bg-gray-950 p-8 shadow-2xl">
+        <div className="mb-8">
+          <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-white text-xl font-bold text-black">
+            N
+          </div>
+          <h1 className="mb-2 text-3xl font-bold">Welcome</h1>
+          <p className="text-gray-400">Sign in to Example App with your NID identity.</p>
+        </div>
+
+        <NIDLoginButton
+          width="100%"
+          height="48px"
+          borderRadius="12px"
+          backgroundColor="#0f172a"
+          hoverBackgroundColor="#1e293b"
+          borderColor="rgba(6, 182, 212, 0.3)"
+          textColor="#e2e8f0"
+          fontSize="15px"
+          fontWeight={600}
+        >
+          Sign in with NID
+        </NIDLoginButton>
+
+        <div className="mt-6 rounded-xl border border-gray-800 bg-black/40 p-4">
+          <div className="flex gap-3">
+            <div className="mt-0.5 text-green-400">✓</div>
+            <div>
+              <p className="text-sm font-medium text-gray-200">Secure authentication</p>
+              <p className="mt-1 text-xs leading-5 text-gray-500">
+                Handled entirely in-browser by NID using OAuth 2.0 and OpenID Connect with PKCE.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }`;
 
-const REACT_USE_SESSION = `// src/hooks/useSession.ts
-import { useEffect, useState } from "react";
+const DASHBOARD_PAGE = `// src/pages/Dashboard.tsx
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useNID } from "@nid/react";
 
-const API_BASE = import.meta.env.VITE_API_BASE;
-
-export function useSession() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+export default function Dashboard() {
+  const navigate = useNavigate();
+  const { user, isAuthenticated, isLoading, logout } = useNID();
 
   useEffect(() => {
-    fetch(\`\${API_BASE}/api/me\`, { credentials: "include" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then(setUser)
-      .finally(() => setLoading(false));
-  }, []);
+    if (!isLoading && !isAuthenticated) {
+      navigate("/login", { replace: true });
+    }
+  }, [isLoading, isAuthenticated, navigate]);
 
-  const logout = async () => {
-    await fetch(\`\${API_BASE}/api/logout\`, {
-      method: "POST",
-      credentials: "include",
-    });
-    setUser(null);
+  if (isLoading) return <FullscreenLoader />;
+  if (!isAuthenticated || !user) return null;
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
   };
 
-  return { user, loading, logout };
+  return (
+    <div className="min-h-screen bg-ink-950 text-ink-50 p-10">
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <p className="mt-2 text-ink-400">Welcome to the demo application.</p>
+          </div>
+          <button onClick={handleLogout} className="rounded-lg border border-ink-700 px-4 py-2">
+            Logout
+          </button>
+        </div>
+
+        <div className="card-surface p-6">
+          <h2 className="mb-5 text-lg font-semibold">NID Identity</h2>
+          <dl className="grid gap-5">
+            <div>
+              <dt className="text-xs text-ink-500">User ID</dt>
+              <dd className="mt-1 font-mono">{user.sub}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-500">Name</dt>
+              <dd className="mt-1">{user.name || "N/A"}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-500">NID Handle</dt>
+              <dd className="mt-1 font-semibold text-brand-light">{user.preferred_username}.nid</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </div>
+  );
 }`;
 
-const NEXTJS_LOGIN_ROUTE = `// app/oauth/login/route.ts
-import { NextResponse } from "next/server";
-import { randomBytes, createHash } from "crypto";
+const CALLBACK_ROUTE = `// src/pages/Callback.tsx
+// The redirect target you registered as redirectUri. NIDProvider
+// completes the code exchange here and then hands control back to
+// your router — this route just needs to exist and render nothing
+// (or a spinner) while that happens.
+import { useNID } from "@nid/react";
+import { Navigate } from "react-router-dom";
 
-export async function GET() {
-  const state = randomBytes(32).toString("base64url");
-  const verifier = randomBytes(32).toString("base64url");
-  const challenge = createHash("sha256").update(verifier).digest("base64url");
-
-  const params = new URLSearchParams({
-    client_id: process.env.NID_CLIENT_ID!,
-    redirect_uri: process.env.APP_REDIRECT_URI!,
-    response_type: "code",
-    scope: "openid",
-    state,
-    code_challenge: challenge,
-    code_challenge_method: "S256",
-  });
-
-  const res = NextResponse.redirect(\`\${process.env.NID_AUTHORIZE_URL}?\${params}\`);
-  res.cookies.set("oauth_state", state, { httpOnly: true, maxAge: 600, sameSite: "lax" });
-  res.cookies.set("pkce_verifier", verifier, { httpOnly: true, maxAge: 600, sameSite: "lax" });
-  return res;
+export default function Callback() {
+  const { isLoading, isAuthenticated } = useNID();
+  if (isLoading) return <FullscreenLoader />;
+  return <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />;
 }`;
 
-const NEXTJS_CALLBACK_ROUTE = `// app/oauth/callback/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { SignJWT } from "jose";
+const NEXTJS_PROVIDER = `// app/providers.tsx
+"use client";
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const code = searchParams.get("code");
-  const state = searchParams.get("state");
-  const savedState = req.cookies.get("oauth_state")?.value;
-  const verifier = req.cookies.get("pkce_verifier")?.value;
+import { NIDProvider } from "@nid/react";
 
-  if (!code || !state || state !== savedState || !verifier) {
-    return NextResponse.json({ error: "invalid oauth state" }, { status: 400 });
-  }
-
-  const tokenRes = await fetch(process.env.NID_TOKEN_URL!, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "authorization_code",
-      code,
-      client_id: process.env.NID_CLIENT_ID!,
-      client_secret: process.env.NID_CLIENT_SECRET!,
-      redirect_uri: process.env.APP_REDIRECT_URI!,
-      code_verifier: verifier,
-    }),
-  }).then((r) => r.json());
-
-  const user = await fetch(process.env.NID_USERINFO_URL!, {
-    headers: { Authorization: \`Bearer \${tokenRes.access_token}\` },
-  }).then((r) => r.json());
-
-  const secret = new TextEncoder().encode(process.env.SESSION_JWT_SECRET!);
-  const jwt = await new SignJWT({ ...user })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime("24h")
-    .sign(secret);
-
-  const res = NextResponse.redirect(new URL("/dashboard", process.env.APP_FRONTEND_URL));
-  res.cookies.set("app_session", jwt, { httpOnly: true, sameSite: "lax", maxAge: 86400 });
-  res.cookies.delete("oauth_state");
-  res.cookies.delete("pkce_verifier");
-  return res;
-}`;
-
-const VUE_SNIPPET = `<!-- src/components/SignIn.vue -->
-<script setup>
-import { onMounted, ref } from "vue";
-
-const API_BASE = import.meta.env.VITE_API_BASE;
-const user = ref(null);
-
-onMounted(async () => {
-  const res = await fetch(\`\${API_BASE}/api/me\`, { credentials: "include" });
-  if (res.ok) user.value = await res.json();
-});
-
-function signIn() {
-  window.location.href = \`\${API_BASE}/oauth/login\`;
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <NIDProvider
+      clientId={process.env.NEXT_PUBLIC_NID_CLIENT_ID!}
+      redirectUri={process.env.NEXT_PUBLIC_NID_REDIRECT_URI!}
+    >
+      {children}
+    </NIDProvider>
+  );
 }
-</script>
 
-<template>
-  <button v-if="!user" @click="signIn" class="glow-brand rounded-xl bg-brand-600 px-5 py-3 text-white">
-    Sign in with NID
-  </button>
-  <p v-else>Welcome, {{ user.name }}</p>
-</template>`;
+// app/layout.tsx
+import { Providers } from "./providers";
 
-const ANGULAR_SNIPPET = `// src/app/auth.service.ts
-import { Injectable } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
-import { environment } from "../environments/environment";
-
-@Injectable({ providedIn: "root" })
-export class AuthService {
-  constructor(private http: HttpClient) {}
-
-  me() {
-    return this.http.get(\`\${environment.apiBase}/api/me\`, { withCredentials: true });
-  }
-
-  signIn() {
-    window.location.href = \`\${environment.apiBase}/oauth/login\`;
-  }
-
-  logout() {
-    return this.http.post(\`\${environment.apiBase}/api/logout\`, {}, { withCredentials: true });
-  }
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
+  );
 }`;
 
-const VANILLA_SNIPPET = `<!-- index.html -->
-<button id="signin">Sign in with NID</button>
-<script>
-  const API_BASE = "https://api.yourapp.com";
+const NEXTJS_PAGE = `// app/dashboard/page.tsx
+"use client";
 
-  document.getElementById("signin").addEventListener("click", () => {
-    window.location.href = \`\${API_BASE}/oauth/login\`;
-  });
+import { useNID } from "@nid/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-  fetch(\`\${API_BASE}/api/me\`, { credentials: "include" })
-    .then((r) => (r.ok ? r.json() : null))
-    .then((user) => {
-      if (user) console.log("Signed in as", user.preferred_username);
-    });
-</script>`;
+export default function DashboardPage() {
+  const { user, isAuthenticated, isLoading } = useNID();
+  const router = useRouter();
 
-const NODE_EXPRESS_SNIPPET = `// server.js
-import express from "express";
-import cookieParser from "cookie-parser";
-import crypto from "crypto";
-import jwt from "jsonwebtoken";
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) router.replace("/login");
+  }, [isLoading, isAuthenticated, router]);
 
-const app = express();
-app.use(cookieParser());
+  if (isLoading || !user) return null;
+  return <p>Welcome, {user.name}</p>;
+}`;
 
-app.get("/oauth/login", (req, res) => {
-  const state = crypto.randomBytes(32).toString("base64url");
-  const verifier = crypto.randomBytes(32).toString("base64url");
-  const challenge = crypto.createHash("sha256").update(verifier).digest("base64url");
+const ANGULAR_MODULE = `// src/app/app.config.ts
+import { ApplicationConfig } from "@angular/core";
+import { provideNID } from "@nid/angular";
 
-  res.cookie("oauth_state", state, { httpOnly: true, maxAge: 600_000, sameSite: "lax" });
-  res.cookie("pkce_verifier", verifier, { httpOnly: true, maxAge: 600_000, sameSite: "lax" });
-
-  const params = new URLSearchParams({
-    client_id: process.env.NID_CLIENT_ID,
-    redirect_uri: process.env.APP_REDIRECT_URI,
-    response_type: "code",
-    scope: "openid",
-    state,
-    code_challenge: challenge,
-    code_challenge_method: "S256",
-  });
-
-  res.redirect(\`\${process.env.NID_AUTHORIZE_URL}?\${params}\`);
-});
-
-app.get("/oauth/callback", async (req, res) => {
-  const { code, state } = req.query;
-  if (!code || state !== req.cookies.oauth_state) {
-    return res.status(400).send("invalid OAuth state");
-  }
-
-  const tokenRes = await fetch(process.env.NID_TOKEN_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "authorization_code",
-      code,
-      client_id: process.env.NID_CLIENT_ID,
-      client_secret: process.env.NID_CLIENT_SECRET,
-      redirect_uri: process.env.APP_REDIRECT_URI,
-      code_verifier: req.cookies.pkce_verifier,
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideNID({
+      clientId: "2X85wiHX94Sng0hJ2lZhfYEQe-164JM5",
+      redirectUri: "http://localhost:4200/callback",
     }),
-  }).then((r) => r.json());
+  ],
+};`;
 
-  const user = await fetch(process.env.NID_USERINFO_URL, {
-    headers: { Authorization: \`Bearer \${tokenRes.access_token}\` },
-  }).then((r) => r.json());
+const ANGULAR_COMPONENT = `// src/app/login/login.component.ts
+import { Component, inject, effect } from "@angular/core";
+import { Router } from "@angular/router";
+import { NIDService } from "@nid/angular";
 
-  const session = jwt.sign(user, process.env.SESSION_JWT_SECRET, { expiresIn: "24h" });
-  res.clearCookie("oauth_state").clearCookie("pkce_verifier");
-  res.cookie("app_session", session, { httpOnly: true, sameSite: "lax", maxAge: 86_400_000 });
-  res.redirect(\`\${process.env.APP_FRONTEND_URL}/dashboard\`);
-});
+@Component({
+  selector: "app-login",
+  standalone: true,
+  template: \`
+    <button (click)="nid.login()" [disabled]="nid.isLoading()">
+      Sign in with NID
+    </button>
+  \`,
+})
+export class LoginComponent {
+  nid = inject(NIDService);
+  private router = inject(Router);
 
-app.get("/api/me", (req, res) => {
-  try {
-    const claims = jwt.verify(req.cookies.app_session, process.env.SESSION_JWT_SECRET);
-    res.json(claims);
-  } catch {
-    res.status(401).json({ error: "unauthorized" });
+  constructor() {
+    effect(() => {
+      if (!this.nid.isLoading() && this.nid.isAuthenticated()) {
+        this.router.navigateByUrl("/dashboard");
+      }
+    });
   }
-});
-
-app.post("/api/logout", (req, res) => {
-  res.clearCookie("app_session").status(204).end();
-});
-
-app.listen(8082);`;
-
-const GO_ANNOTATED = `// This mirrors your reference backend at cmd/server/main.go
-//
-// 1. GET /oauth/login
-//    - generates \`state\` (CSRF) and a PKCE \`code_verifier\`
-//    - stores both in short-lived HttpOnly cookies
-//    - derives \`code_challenge = base64url(sha256(code_verifier))\`
-//    - redirects the browser to NID's /oauth/authorize
-//
-// 2. GET /oauth/callback
-//    - validates \`state\` against the cookie (rejects otherwise)
-//    - exchanges \`code\` + \`code_verifier\` for tokens at /oauth/token
-//    - calls /oauth/userinfo with the access token
-//    - signs a first-party session JWT (HS256) with your own secret
-//    - sets it as an HttpOnly \`app_session\` cookie
-//    - redirects to the frontend dashboard
-//
-// 3. GET /api/me       — verifies app_session, returns the claims
-// 4. POST /api/logout  — clears app_session
-
-func loginHandler(w http.ResponseWriter, r *http.Request) {
-    state, _ := randomString(32)
-    verifier, _ := randomString(32)
-    setTemporaryCookie(w, "oauth_state", state, 600)
-    setTemporaryCookie(w, "pkce_verifier", verifier, 600)
-
-    params := url.Values{
-        "client_id":             {nidClientID},
-        "redirect_uri":          {redirectURI},
-        "response_type":         {"code"},
-        "scope":                 {"openid"},
-        "state":                 {state},
-        "code_challenge":        {pkceChallenge(verifier)},
-        "code_challenge_method": {"S256"},
-    }
-    http.Redirect(w, r, nidAuthorizeURL+"?"+params.Encode(), http.StatusFound)
 }`;
 
-const PYTHON_FASTAPI_SNIPPET = `# main.py
-import base64, hashlib, os, secrets
-from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse, JSONResponse
-import httpx, jwt
+const OTHER_FRAMEWORKS = `// @nid/react and @nid/angular wrap the same underlying flow.
+// For Vue, Svelte, or a framework-less page, drive it directly:
 
-app = FastAPI()
+import { NIDClient } from "@nid/core";
 
-NID_AUTHORIZE_URL = os.environ["NID_AUTHORIZE_URL"]
-NID_TOKEN_URL = os.environ["NID_TOKEN_URL"]
-NID_USERINFO_URL = os.environ["NID_USERINFO_URL"]
-CLIENT_ID = os.environ["NID_CLIENT_ID"]
-CLIENT_SECRET = os.environ["NID_CLIENT_SECRET"]
-REDIRECT_URI = os.environ["APP_REDIRECT_URI"]
-SESSION_SECRET = os.environ["SESSION_JWT_SECRET"]
+export const nid = new NIDClient({
+  clientId: "2X85wiHX94Sng0hJ2lZhfYEQe-164JM5",
+  redirectUri: "https://app.yourapp.com/callback",
+});
 
-def b64url(data: bytes) -> str:
-    return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
+// Kick off login
+nid.login();
 
-@app.get("/oauth/login")
-def login():
-    state = b64url(secrets.token_bytes(32))
-    verifier = b64url(secrets.token_bytes(32))
-    challenge = b64url(hashlib.sha256(verifier.encode()).digest())
+// On your redirect route
+await nid.handleRedirectCallback();
 
-    resp = RedirectResponse(
-        f"{NID_AUTHORIZE_URL}?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}"
-        f"&response_type=code&scope=openid&state={state}"
-        f"&code_challenge={challenge}&code_challenge_method=S256"
-    )
-    resp.set_cookie("oauth_state", state, httponly=True, max_age=600, samesite="lax")
-    resp.set_cookie("pkce_verifier", verifier, httponly=True, max_age=600, samesite="lax")
-    return resp
+// Anywhere after that
+const user = nid.getUser();
+const isAuthenticated = nid.isAuthenticated();`;
 
-@app.get("/oauth/callback")
-async def callback(request: Request, code: str, state: str):
-    if state != request.cookies.get("oauth_state"):
-        return JSONResponse({"error": "invalid oauth state"}, status_code=400)
+const PROVIDER_PROPS_ROWS: (string | ReactNode)[][] = [
+  ["clientId", "string", "Your public client ID from the NID console. Safe to embed — it identifies the app, it doesn't authorize on its own."],
+  ["redirectUri", "string", "Must exactly match a URI registered for this client. Where the SDK completes the code exchange."],
+  ["scope", "string (optional)", 'Defaults to "openid". Add space-delimited scopes your client is approved for.'],
+  ["storage", '"memory" | "localStorage" (optional)', "Where the session is cached between reloads. Defaults to memory — see Session & token storage."],
+];
 
-    async with httpx.AsyncClient() as client:
-        token = (await client.post(NID_TOKEN_URL, data={
-            "grant_type": "authorization_code",
-            "code": code,
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
-            "redirect_uri": REDIRECT_URI,
-            "code_verifier": request.cookies.get("pkce_verifier"),
-        })).json()
+const USENID_ROWS: (string | ReactNode)[][] = [
+  ["user", "{ sub, name, preferred_username } | null", "The current identity, or null while unauthenticated."],
+  ["isAuthenticated", "boolean", "True once a valid session exists."],
+  ["isLoading", "boolean", "True while the SDK is restoring or exchanging a session. Gate all redirect logic on this being false first."],
+  ["login()", "() => void", "Starts the redirect to NID. Equivalent to what <NIDLoginButton> calls internally."],
+  ["logout()", "() => void", "Clears the local session. Pair with a navigate() back to your login route."],
+];
 
-        user = (await client.get(NID_USERINFO_URL, headers={
-            "Authorization": f"Bearer {token['access_token']}"
-        })).json()
-
-    session = jwt.encode(user, SESSION_SECRET, algorithm="HS256")
-    resp = RedirectResponse(f"{os.environ['APP_FRONTEND_URL']}/dashboard")
-    resp.set_cookie("app_session", session, httponly=True, samesite="lax", max_age=86400)
-    resp.delete_cookie("oauth_state")
-    resp.delete_cookie("pkce_verifier")
-    return resp
-
-@app.get("/api/me")
-def me(request: Request):
-    token = request.cookies.get("app_session")
-    try:
-        return jwt.decode(token, SESSION_SECRET, algorithms=["HS256"])
-    except Exception:
-        return JSONResponse({"error": "unauthorized"}, status_code=401)`;
-
-const JAVA_SPRING_SNIPPET = `// OAuthController.java
-@RestController
-public class OAuthController {
-
-    @Value("\${nid.client-id}") String clientId;
-    @Value("\${nid.client-secret}") String clientSecret;
-    @Value("\${nid.authorize-url}") String authorizeUrl;
-    @Value("\${nid.token-url}") String tokenUrl;
-    @Value("\${nid.userinfo-url}") String userinfoUrl;
-    @Value("\${app.redirect-uri}") String redirectUri;
-
-    @GetMapping("/oauth/login")
-    public void login(HttpServletResponse res) throws IOException {
-        String state = randomToken();
-        String verifier = randomToken();
-        String challenge = base64Url(sha256(verifier));
-
-        addHttpOnlyCookie(res, "oauth_state", state, 600);
-        addHttpOnlyCookie(res, "pkce_verifier", verifier, 600);
-
-        String url = UriComponentsBuilder.fromHttpUrl(authorizeUrl)
-            .queryParam("client_id", clientId)
-            .queryParam("redirect_uri", redirectUri)
-            .queryParam("response_type", "code")
-            .queryParam("scope", "openid")
-            .queryParam("state", state)
-            .queryParam("code_challenge", challenge)
-            .queryParam("code_challenge_method", "S256")
-            .build().toUriString();
-
-        res.sendRedirect(url);
-    }
-
-    @GetMapping("/oauth/callback")
-    public void callback(@RequestParam String code, @RequestParam String state,
-                          @CookieValue("oauth_state") String savedState,
-                          @CookieValue("pkce_verifier") String verifier,
-                          HttpServletResponse res) {
-        if (!state.equals(savedState)) {
-            res.setStatus(400);
-            return;
-        }
-        // exchange code -> tokens, call /oauth/userinfo, sign app_session JWT,
-        // set HttpOnly cookie, redirect to frontend — same shape as the Go reference.
-    }
-}`;
-
-const PHP_SNIPPET = `<?php
-// oauth-login.php
-session_start();
-
-$state = bin2hex(random_bytes(32));
-$verifier = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
-$challenge = rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
-
-setcookie('oauth_state', $state, ['httponly' => true, 'samesite' => 'Lax', 'expires' => time() + 600]);
-setcookie('pkce_verifier', $verifier, ['httponly' => true, 'samesite' => 'Lax', 'expires' => time() + 600]);
-
-$params = http_build_query([
-    'client_id' => getenv('NID_CLIENT_ID'),
-    'redirect_uri' => getenv('APP_REDIRECT_URI'),
-    'response_type' => 'code',
-    'scope' => 'openid',
-    'state' => $state,
-    'code_challenge' => $challenge,
-    'code_challenge_method' => 'S256',
-]);
-
-header('Location: ' . getenv('NID_AUTHORIZE_URL') . '?' . $params);
-
-// oauth-callback.php
-$ch = curl_init(getenv('NID_TOKEN_URL'));
-curl_setopt_array($ch, [
-    CURLOPT_POST => true,
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POSTFIELDS => http_build_query([
-        'grant_type' => 'authorization_code',
-        'code' => $_GET['code'],
-        'client_id' => getenv('NID_CLIENT_ID'),
-        'client_secret' => getenv('NID_CLIENT_SECRET'),
-        'redirect_uri' => getenv('APP_REDIRECT_URI'),
-        'code_verifier' => $_COOKIE['pkce_verifier'],
-    ]),
-]);
-$token = json_decode(curl_exec($ch), true);`;
+const LOGINBUTTON_ROWS: (string | ReactNode)[][] = [
+  ["width / height", "string", 'CSS size values, e.g. "100%", "48px".'],
+  ["borderRadius", "string", "CSS border-radius value."],
+  ["backgroundColor / hoverBackgroundColor", "string", "Button fill, default and hover states."],
+  ["borderColor", "string", "Button border color, any CSS color value."],
+  ["textColor / iconColor", "string", "Label and icon color."],
+  ["fontSize / fontWeight", "string / number", "Label typography."],
+  ["children", "ReactNode", 'Button label — defaults to "Sign in with NID" if omitted.'],
+];
 
 /* ------------------------------------------------------------
    Main component
@@ -781,7 +568,7 @@ export default function Docs() {
           </div>
           <div>
             <p className="text-sm font-semibold text-ink-50">NID Docs</p>
-            <p className="text-xs text-ink-500">OAuth 2.0 · OpenID Connect</p>
+            <p className="text-xs text-ink-500">@nid/react · no backend required</p>
           </div>
         </div>
 
@@ -801,8 +588,9 @@ export default function Docs() {
       <div className="mx-auto flex max-w-7xl">
         {/* Sidebar */}
         <aside
-          className={`${navOpen ? "block" : "hidden"
-            } glass fixed inset-y-0 left-0 z-20 w-72 overflow-y-auto pt-20 lg:sticky lg:top-[65px] lg:block lg:h-[calc(100vh-65px)] lg:border-r lg:border-ink-800 lg:bg-transparent lg:pt-6 lg:backdrop-blur-none`}
+          className={`${
+            navOpen ? "block" : "hidden"
+          } glass fixed inset-y-0 left-0 z-20 w-72 overflow-y-auto pt-20 lg:sticky lg:top-[65px] lg:block lg:h-[calc(100vh-65px)] lg:border-r lg:border-ink-800 lg:bg-transparent lg:pt-6 lg:backdrop-blur-none`}
         >
           <div className="px-4 pb-10 sm:px-6 lg:px-4">
             <div className="mb-4 sm:hidden">
@@ -822,10 +610,11 @@ export default function Docs() {
                       <button
                         key={entry.id}
                         onClick={() => setActive(entry.id)}
-                        className={`block w-full rounded-lg px-2.5 py-1.5 text-left text-sm transition ${active === entry.id
+                        className={`block w-full rounded-lg px-2.5 py-1.5 text-left text-sm transition ${
+                          active === entry.id
                             ? "bg-brand-600/15 font-medium text-brand-light"
                             : "text-ink-300 hover:bg-ink-800/50 hover:text-ink-100"
-                          }`}
+                        }`}
                       >
                         {entry.title}
                       </button>
@@ -916,56 +705,36 @@ function PageContent({
   switch (id) {
     case "overview":
       return <Overview onNavigate={onNavigate} />;
+    case "install":
+      return <Install />;
     case "quickstart":
       return <QuickStart />;
-    case "register-app":
-      return <RegisterApp />;
-    case "env-vars":
-      return <EnvVars />;
-    case "oauth-vs-oidc":
-      return <OAuthVsOIDC />;
-    case "auth-code-pkce":
-      return <AuthCodePKCE />;
-    case "tokens":
-      return <Tokens />;
-    case "scopes":
-      return <Scopes />;
-    case "sessions":
-      return <Sessions />;
+    case "public-clients":
+      return <PublicClients />;
+    case "session-tokens":
+      return <SessionTokens />;
+    case "user-object":
+      return <UserObject />;
     case "guide-react":
       return <GuideReact />;
     case "guide-nextjs":
       return <GuideNextjs />;
-    case "guide-vue":
-      return <GuideVue />;
     case "guide-angular":
       return <GuideAngular />;
-    case "guide-vanilla":
-      return <GuideVanilla />;
-    case "guide-node":
-      return <GuideNode />;
-    case "guide-go":
-      return <GuideGo />;
-    case "guide-python":
-      return <GuidePython />;
-    case "guide-java":
-      return <GuideJava />;
-    case "guide-php":
-      return <GuidePhp />;
-    case "api-authorize":
-      return <ApiAuthorize />;
-    case "api-token":
-      return <ApiToken />;
-    case "api-userinfo":
-      return <ApiUserinfo />;
-    case "api-errors":
-      return <ApiErrors />;
-    case "security-best-practices":
-      return <SecurityBestPractices />;
-    case "security-secrets":
-      return <SecuritySecrets />;
-    case "deploy-checklist":
-      return <DeployChecklist />;
+    case "guide-other":
+      return <GuideOther />;
+    case "ref-provider":
+      return <RefProvider />;
+    case "ref-usenid":
+      return <RefUseNID />;
+    case "ref-loginbutton":
+      return <RefLoginButton />;
+    case "security-no-secrets":
+      return <SecurityNoSecrets />;
+    case "security-redirect":
+      return <SecurityRedirect />;
+    case "security-logout":
+      return <SecurityLogout />;
     case "troubleshooting":
       return <Troubleshooting />;
     default:
@@ -980,15 +749,15 @@ function Overview({ onNavigate }: { onNavigate: (id: string) => void }) {
     <>
       <SectionHeading
         eyebrow="NID Platform"
-        title="Identity for your apps, done the standard way"
-        lead="NID is an OAuth 2.0 authorization server and OpenID Connect provider. Your app never sees a password — it redirects to NID, gets back a short-lived code, and exchanges it server-side for tokens and a verified identity."
+        title="Sign-in with no backend to run"
+        lead="@nid/react wraps the entire OAuth 2.0 + OIDC exchange — redirect, callback, token handling, session restore — behind a provider and a hook. Your app never touches a token directly."
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
         {[
-          { t: "Authorization Code + PKCE", d: "The only flow this platform issues codes for. Safe for both server-rendered and single-page apps." },
-          { t: "OpenID Connect", d: "openid scope returns a verifiable identity: sub, name, preferred_username." },
-          { t: "Bring your own session", d: "Your backend exchanges the code, then mints its own short-lived session (JWT cookie, in the reference app)." },
+          { t: "Zero server code", d: "NIDProvider + useNID() is the whole integration. No /oauth/callback route for you to write." },
+          { t: "Public client, PKCE only", d: "No client secret exists in this model — the SDK generates and verifies PKCE per login attempt." },
+          { t: "One hook, everywhere", d: "user, isAuthenticated, isLoading, login(), logout() — same shape in React, Next.js, and Angular." },
         ].map((c) => (
           <div key={c.t} className="card-surface glass-hover p-5">
             <p className="mb-1 text-sm font-semibold text-ink-100">{c.t}</p>
@@ -997,55 +766,43 @@ function Overview({ onNavigate }: { onNavigate: (id: string) => void }) {
         ))}
       </div>
 
-      <H2>How the pieces fit together</H2>
-      <P>
-        There are three parties in every sign-in: <strong className="text-ink-100">NID</strong> (the
-        identity provider), <strong className="text-ink-100">your backend</strong> (the OAuth client,
-        confidential — it holds the client secret), and{" "}
-        <strong className="text-ink-100">your frontend</strong> (React, Vue, mobile, whatever renders the
-        UI). The frontend never talks to NID directly — it only talks to your backend.
-      </P>
-
+      <H2>What the SDK does under the hood</H2>
       <CodeBlock
         lang="text"
         title="request flow"
-        code={`Browser                Your Backend                  NID
-   |  click "Sign in"        |                          |
-   |------------------------>|                          |
-   |   GET /oauth/login      | build state + PKCE pair  |
-   |                         |------------------------->|
-   |  <---- 302 redirect to NID /oauth/authorize ------- |
-   |------------------------------------------------------>|
-   |         user authenticates + approves on NID          |
-   |  <---- 302 redirect to /oauth/callback?code=... ------|
-   |------------------------>|                          |
-   |  GET /oauth/callback    | POST /oauth/token ------>|
-   |                         | <---- access_token -------|
-   |                         | GET /oauth/userinfo ----->|
-   |                         | <---- sub, name ...  ------|
-   |                         | sign app_session JWT      |
-   |  <--- Set-Cookie: app_session; 302 to /dashboard ---|`}
+        code={`Browser (your app)                                 NID
+   |  <NIDLoginButton> click                          |
+   |  SDK generates state + PKCE pair, redirects ----->|
+   |                                                    |
+   |          user authenticates + approves on NID      |
+   |  <---- 302 redirect to your redirectUri -----------|
+   |                                                    |
+   |  SDK exchanges code + code_verifier -------------->|
+   |  <---- tokens -------------------------------------|
+   |  SDK fetches identity ---------------------------->|
+   |  <---- sub, name, preferred_username --------------|
+   |                                                    |
+   |  useNID() now returns { user, isAuthenticated }     |`}
       />
 
-      <Callout tone="info" title="This documentation mirrors a real reference implementation">
-        Every code sample on this site is grounded in a working Go backend and React
-        frontend pair (see <button className="underline decoration-dotted underline-offset-2" onClick={() => onNavigate("guide-go")}>Go</button> and{" "}
-        <button className="underline decoration-dotted underline-offset-2" onClick={() => onNavigate("guide-react")}>React</button>{" "}
-        guides). Framework guides for other stacks reproduce the same four endpoints
-        (<code className="font-mono text-xs">/oauth/login</code>,{" "}
-        <code className="font-mono text-xs">/oauth/callback</code>,{" "}
-        <code className="font-mono text-xs">/api/me</code>,{" "}
-        <code className="font-mono text-xs">/api/logout</code>) so you can swap languages without
-        changing the protocol.
+      <Callout tone="info" title="No client secret in this flow, ever">
+        A confidential secret has no place in code that ships to a browser. This
+        SDK is built for <strong className="text-ink-100">public clients</strong> —
+        registered with only a <code className="font-mono text-xs">client_id</code>{" "}
+        and one or more allow-listed redirect URIs. See{" "}
+        <button className="underline decoration-dotted underline-offset-2" onClick={() => onNavigate("public-clients")}>
+          Public clients &amp; PKCE
+        </button>{" "}
+        for why that's still secure.
       </Callout>
 
       <H2>Where to start</H2>
       <div className="grid gap-3 sm:grid-cols-2">
         {[
-          { id: "quickstart", t: "Quick start", d: "Get a working sign-in in under 10 minutes." },
-          { id: "register-app", t: "Register an application", d: "Create a client, set redirect URIs." },
-          { id: "auth-code-pkce", t: "Authorization Code + PKCE", d: "Understand the flow before you wire it up." },
-          { id: "security-best-practices", t: "Security best practices", d: "The non-negotiables before you ship." },
+          { id: "install", t: "Install & configure", d: "Add the package, wire up NIDProvider." },
+          { id: "quickstart", t: "Quick start", d: "Login button to protected dashboard in one pass." },
+          { id: "guide-nextjs", t: "Next.js guide", d: "Provider placement in the App Router." },
+          { id: "security-no-secrets", t: "Never ship a client secret", d: "What to fix if your console gave you one." },
         ].map((c) => (
           <button
             key={c.id}
@@ -1061,161 +818,91 @@ function Overview({ onNavigate }: { onNavigate: (id: string) => void }) {
   );
 }
 
+function Install() {
+  return (
+    <>
+      <SectionHeading eyebrow="Getting Started" title="Install & configure" lead="Register a public client, then wrap your app in NIDProvider." />
+
+      <H2>1. Register a public (SPA) client</H2>
+      <P>
+        In the NID console, create an application and choose client type{" "}
+        <strong className="text-ink-100">Public / SPA</strong> — not Confidential. Public
+        clients receive only a <code className="font-mono text-xs">client_id</code>; no
+        secret is issued, because none should ever exist in browser code.
+      </P>
+      <Table
+        head={["Field", "Value"]}
+        rows={[
+          ["Client type", "Public (SPA)"],
+          ["Grant type", "Authorization Code + PKCE"],
+          ["Redirect URIs", "Every exact URL your app redirects back to — one per environment"],
+        ]}
+      />
+
+      <H2>2. Install the package</H2>
+      <CodeBlock lang="bash" code={INSTALL_CMD} />
+
+      <H2>3. Wrap your app</H2>
+      <CodeBlock lang="tsx" title="src/main.tsx" code={PROVIDER_SETUP} />
+
+      <Callout tone="success" title="clientId is safe to commit">
+        Unlike a secret, <code className="font-mono text-xs">clientId</code> identifies
+        your app but can't authorize anything by itself — PKCE does the proving. It's fine
+        in source control and in your bundled JS.
+      </Callout>
+    </>
+  );
+}
+
 function QuickStart() {
   return (
     <>
-      <SectionHeading eyebrow="Getting Started" title="Quick start" lead="Wire up sign-in end to end using the reference backend + frontend shape." />
+      <SectionHeading eyebrow="Getting Started" title="Quick start" lead="A login page, a protected dashboard, and the callback route that connects them." />
 
-      <H2>1. Register your app</H2>
-      <P>Create a client in the NID console and note the <code className="font-mono text-xs">client_id</code> and <code className="font-mono text-xs">client_secret</code>. Add your callback URL as an allowed redirect URI — exact match, including path and port.</P>
+      <H2>1. Login page</H2>
+      <CodeBlock lang="tsx" title="src/pages/Login.tsx" code={LOGIN_PAGE} />
 
-      <H2>2. Set environment variables</H2>
-      <CodeBlock lang="bash" title=".env" code={ENV_EXAMPLE} />
+      <H2>2. Callback route</H2>
+      <P>Point <code className="font-mono text-xs">redirectUri</code> at a real route in your router. It only needs to exist — the SDK does the exchange automatically when this route mounts.</P>
+      <CodeBlock lang="tsx" title="src/pages/Callback.tsx" code={CALLBACK_ROUTE} />
 
-      <H2>3. Implement the four endpoints on your backend</H2>
-      <Table
-        head={["Endpoint", "Purpose"]}
-        rows={[
-          [<><MethodBadge method="GET" /> <code className="font-mono text-xs">/oauth/login</code></>, "Builds state + PKCE pair, redirects to NID"],
-          [<><MethodBadge method="GET" /> <code className="font-mono text-xs">/oauth/callback</code></>, "Exchanges the code, fetches userinfo, sets your session cookie"],
-          [<><MethodBadge method="GET" /> <code className="font-mono text-xs">/api/me</code></>, "Returns the current user from your session"],
-          [<><MethodBadge method="POST" /> <code className="font-mono text-xs">/api/logout</code></>, "Clears the session cookie"],
-        ]}
-      />
-      <P>Full implementations: <code className="font-mono text-xs">Go</code>, <code className="font-mono text-xs">Node</code>, <code className="font-mono text-xs">Next.js</code>, <code className="font-mono text-xs">Python</code>, <code className="font-mono text-xs">Java</code>, and <code className="font-mono text-xs">PHP</code> are under Integration Guides in the sidebar.</P>
+      <H2>3. Protected dashboard</H2>
+      <CodeBlock lang="tsx" title="src/pages/Dashboard.tsx" code={DASHBOARD_PAGE} />
 
-      <H2>4. Point your frontend at it</H2>
-      <CodeBlock lang="tsx" title="src/pages/Login.tsx" code={REACT_LOGIN_TSX} />
-
-      <Callout tone="success" title="That's it">
-        Clicking the button redirects to NID, the user approves, and lands back on your
-        dashboard with a session cookie already set.
+      <Callout tone="success" title="That's the whole integration">
+        No token exchange to write, no cookie to set, no CORS config for a backend that
+        doesn't exist. <code className="font-mono text-xs">isLoading</code> covers the
+        window while the SDK restores or exchanges a session — always gate redirects on
+        it being false first.
       </Callout>
-    </>
-  );
-}
-
-function RegisterApp() {
-  return (
-    <>
-      <SectionHeading eyebrow="Getting Started" title="Register an application" lead="Every OAuth client needs a client_id, a client_secret, and at least one exact redirect URI." />
-
-      <H2>Application settings</H2>
-      <Table
-        head={["Field", "Notes"]}
-        rows={[
-          ["Application name", "Shown on the NID consent screen."],
-          ["Redirect URIs", "Exact match required — scheme, host, port and path. Add one per environment (local, staging, prod)."],
-          ["Grant types", "authorization_code only. Implicit and password grants are not issued."],
-          ["Scopes", "openid is required for OIDC identity claims. Add custom scopes if your platform exposes them."],
-          ["Client type", "Confidential — the client secret must stay on your backend, never in the browser or a mobile bundle."],
-        ]}
-      />
-
-      <Callout tone="warn" title="Redirect URI mismatch is the #1 setup error">
-        <code className="font-mono text-xs">http://localhost:8082/oauth/callback</code> and{" "}
-        <code className="font-mono text-xs">http://localhost:8082/oauth/callback/</code> (trailing
-        slash) are different URIs. Register exactly what your server sends.
-      </Callout>
-
-      <H2>What you get back</H2>
-      <CodeBlock
-        lang="text"
-        code={`client_id      hZnNd0BdhkOkqgPGJRBoXdfaaaAkR2LS
-client_secret  ******************************** (shown once — store it now)`}
-      />
-      <P>Treat the secret like a database password: put it in your secret manager or <code className="font-mono text-xs">.env</code> (git-ignored), rotate it if it ever leaks, and never send it to a browser.</P>
-    </>
-  );
-}
-
-function EnvVars() {
-  return (
-    <>
-      <SectionHeading eyebrow="Getting Started" title="Environment variables" lead="Keep every OAuth secret server-side. The pattern below matches the reference Go server's constants, moved into config." />
-
-      <CodeBlock lang="bash" title=".env" code={ENV_EXAMPLE} />
-
-      <H2>Loading rules</H2>
-      <Table
-        head={["Variable", "Where it may live"]}
-        rows={[
-          ["NID_CLIENT_ID", "Backend only. Not secret by itself, but keep it out of frontend bundles anyway."],
-          ["NID_CLIENT_SECRET", "Backend only. Never in a frontend build, mobile app, or public repo."],
-          ["SESSION_JWT_SECRET", "Backend only. Used solely to sign your own session cookie — unrelated to NID's keys."],
-          ["VITE_API_BASE / NEXT_PUBLIC_*", "Frontend-safe: just the URL of your own backend, not NID directly."],
-        ]}
-      />
-
-      <Callout tone="danger" title="Never commit .env">
-        Add <code className="font-mono text-xs">.env</code> to <code className="font-mono text-xs">.gitignore</code> and ship a{" "}
-        <code className="font-mono text-xs">.env.example</code> with placeholder values instead. If a secret
-        ever lands in git history, rotate it — removing the commit is not enough.
-      </Callout>
-
-      <H2>Loading in code</H2>
-      <CodeBlock
-        lang="go"
-        title="Go"
-        code={`clientID := os.Getenv("NID_CLIENT_ID")
-clientSecret := os.Getenv("NID_CLIENT_SECRET")
-if clientID == "" || clientSecret == "" {
-    log.Fatal("missing NID_CLIENT_ID / NID_CLIENT_SECRET")
-}`}
-      />
-      <CodeBlock
-        lang="javascript"
-        title="Node.js (dotenv)"
-        code={`import "dotenv/config";
-const { NID_CLIENT_ID, NID_CLIENT_SECRET } = process.env;
-if (!NID_CLIENT_ID || !NID_CLIENT_SECRET) {
-  throw new Error("missing NID_CLIENT_ID / NID_CLIENT_SECRET");
-}`}
-      />
     </>
   );
 }
 
 /* ---------- Core Concepts ---------- */
 
-function OAuthVsOIDC() {
+function PublicClients() {
   return (
     <>
-      <SectionHeading eyebrow="Core Concepts" title="OAuth 2.0 vs OpenID Connect" lead="OAuth 2.0 is an authorization framework. OIDC is a thin identity layer on top of it." />
+      <SectionHeading eyebrow="Core Concepts" title="Public clients & PKCE" lead="Why a browser-only app can be secure without ever holding a secret." />
 
-      <Table
-        head={["", "OAuth 2.0", "OpenID Connect"]}
-        rows={[
-          ["Answers", "\u201cCan this app act on the user's behalf?\u201d", "\u201cWho is this user?\u201d"],
-          ["Core artifact", "Access token (opaque to the client)", "ID token + userinfo claims"],
-          ["On NID", "Always issued alongside OIDC", "Requested via the openid scope"],
-        ]}
-      />
       <P>
-        In practice: request the <code className="font-mono text-xs">openid</code> scope, and NID's
-        token response and <code className="font-mono text-xs">/oauth/userinfo</code> endpoint give you a
-        verified <code className="font-mono text-xs">sub</code> (stable user ID), display{" "}
-        <code className="font-mono text-xs">name</code>, and{" "}
-        <code className="font-mono text-xs">preferred_username</code>.
+        A <strong className="text-ink-100">confidential client</strong> (a backend) proves
+        its identity with a secret only it knows. A browser can't keep a secret — anything
+        shipped in JS is readable by the person running that JS. OAuth's answer for this
+        case is the <strong className="text-ink-100">public client</strong>: no secret is
+        issued at all, and <strong className="text-ink-100">PKCE</strong> takes over proving
+        that whoever exchanges the authorization code is the same party who started the
+        login.
       </P>
-    </>
-  );
-}
 
-function AuthCodePKCE() {
-  return (
-    <>
-      <SectionHeading eyebrow="Core Concepts" title="Authorization Code Flow with PKCE" lead="The only flow NID issues codes for. PKCE protects the code exchange even for confidential clients." />
-
-      <H2>Step by step</H2>
+      <H2>How PKCE replaces the secret</H2>
       <ol className="mb-6 space-y-4">
         {[
-          ["Generate state + PKCE pair", "Your backend creates a random state (CSRF protection) and a code_verifier, then derives code_challenge = base64url(sha256(code_verifier))."],
-          ["Redirect to /oauth/authorize", "Send client_id, redirect_uri, response_type=code, scope=openid, state, code_challenge, code_challenge_method=S256."],
-          ["User authenticates on NID", "NID handles login and consent — your app never sees credentials."],
-          ["NID redirects back with a code", "GET /oauth/callback?code=...&state=... — verify state matches what you stored before doing anything else."],
-          ["Exchange the code", "POST /oauth/token with grant_type=authorization_code, code, client_id, client_secret, redirect_uri, and code_verifier."],
-          ["Fetch identity", "GET /oauth/userinfo with the access token to get sub, name, preferred_username."],
+          ["SDK generates a code_verifier", "A random string, created fresh in memory for this login attempt only."],
+          ["Derives a code_challenge", "sha256(code_verifier), sent with the initial redirect to NID — the verifier itself is never sent yet."],
+          ["NID stores the challenge against the issued code", "Anyone who intercepts the code alone still can't redeem it."],
+          ["SDK exchanges the code together with the original verifier", "NID recomputes the hash and checks it matches — proving continuity without any long-lived secret."],
         ].map(([t, d], i) => (
           <li key={t} className="card-surface flex gap-4 p-4">
             <span className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-brand-600/20 font-mono text-xs font-semibold text-brand-light">
@@ -1229,130 +916,69 @@ function AuthCodePKCE() {
         ))}
       </ol>
 
-      <H2>Deriving the code_challenge</H2>
-      <CodeBlock
-        lang="go"
-        title="reference implementation"
-        code={`func pkceChallenge(verifier string) string {
-    hash := sha256.Sum256([]byte(verifier))
-    return base64.RawURLEncoding.EncodeToString(hash[:])
-}`}
-      />
-
-      <Callout tone="info" title="Why PKCE even for a confidential backend client">
-        The reference server generates the verifier itself, so an attacker who
-        intercepts the authorization code still can't complete the exchange without
-        it. It's cheap insurance and NID requires it on every client.
+      <Callout tone="warn" title="If your console issued a client secret, request a public client instead">
+        A secret paired with an SDK that runs entirely in the browser means that secret
+        is effectively public the moment you ship it. Re-register the app as Public /
+        SPA — you'll get a <code className="font-mono text-xs">client_id</code> and
+        nothing else, which is what <code className="font-mono text-xs">NIDProvider</code>{" "}
+        expects.
       </Callout>
     </>
   );
 }
 
-function Tokens() {
+function SessionTokens() {
   return (
     <>
-      <SectionHeading eyebrow="Core Concepts" title="Tokens" lead="The token endpoint returns everything your backend needs — nothing the browser should ever hold directly." />
+      <SectionHeading eyebrow="Core Concepts" title="Session & token storage" lead="The SDK holds tokens for you — but where it holds them is a real security choice." />
 
       <Table
-        head={["Token", "Format", "Used for"]}
+        head={["storage option", "Persists across reload", "Exposure if XSS occurs"]}
         rows={[
-          ["access_token", "Opaque / bearer", "Authenticating calls to /oauth/userinfo (and any NID-protected API)."],
-          ["id_token", "JWT", "OIDC identity assertion — verify signature + expiry if you consume it directly."],
-          ["refresh_token", "Opaque", "Only if offline_access-style long-lived sessions were negotiated for your client."],
-          ["expires_in", "Seconds", "Access token lifetime — treat as short-lived, don't cache past this."],
+          ["memory (default)", "No — re-runs the silent session check on load", "Lowest — nothing readable from disk or a storage API"],
+          ["localStorage", "Yes — instant restore, no network round trip", "Higher — any injected script can read it directly"],
         ]}
       />
 
-      <H2>Token response shape</H2>
       <CodeBlock
-        lang="json"
-        code={`{
-  "access_token": "eyJhbGciOi...",
-  "token_type": "Bearer",
-  "expires_in": 3600,
-  "id_token": "eyJhbGciOi...",
-  "scope": "openid"
-}`}
+        lang="tsx"
+        code={`<NIDProvider
+  clientId="..."
+  redirectUri="..."
+  storage="memory" // default — recommended unless you need instant reload restore
+>`}
       />
 
-      <Callout tone="warn" title="Tokens never touch the browser">
-        In the reference architecture, the frontend never sees NID's access token or
-        id token. Your backend consumes them once, then issues its own short-lived
-        session cookie. This keeps the client_secret and NID's tokens off the
-        client entirely.
+      <Callout tone="info" title="Prefer memory storage">
+        The brief reload flash from a memory-only session (useNID() resolving
+        isLoading a moment after mount) is a small UX cost for meaningfully lower
+        exposure if an XSS bug ever slips into your app. Reach for{" "}
+        <code className="font-mono text-xs">localStorage</code> only if that flash is
+        genuinely unacceptable for your product, and pair it with strict output
+        encoding and a Content-Security-Policy elsewhere in the app.
       </Callout>
     </>
   );
 }
 
-function Scopes() {
+function UserObject() {
   return (
     <>
-      <SectionHeading eyebrow="Core Concepts" title="Scopes & claims" lead="Scopes are what you ask for; claims are what comes back." />
-      <Table
-        head={["Scope", "Claims returned"]}
-        rows={[
-          ["openid", "sub — required for any OIDC request"],
-          ["profile (if enabled on your client)", "name, preferred_username"],
-        ]}
-      />
-      <H2>/oauth/userinfo response</H2>
+      <SectionHeading eyebrow="Core Concepts" title="The user object" lead="What useNID().user contains once isAuthenticated is true." />
       <CodeBlock
-        lang="json"
-        code={`{
-  "sub": "usr_9f21ac",
-  "name": "Ada Lovelace",
-  "preferred_username": "ada"
+        lang="ts"
+        code={`interface NIDUser {
+  sub: string;                  // stable, durable user ID — use this as your foreign key
+  name: string | null;          // display name, can be empty
+  preferred_username: string;   // NID handle, e.g. "ada"
 }`}
       />
-      <P>Treat <code className="font-mono text-xs">sub</code> as the durable identifier for the user in your own database — <code className="font-mono text-xs">name</code> and <code className="font-mono text-xs">preferred_username</code> can change.</P>
+      <P>Treat <code className="font-mono text-xs">sub</code> as the identifier you store — <code className="font-mono text-xs">name</code> and <code className="font-mono text-xs">preferred_username</code> can change over time.</P>
     </>
   );
 }
 
-function Sessions() {
-  return (
-    <>
-      <SectionHeading eyebrow="Core Concepts" title="Sessions & cookies" lead="NID hands you an identity once. What you do with it afterward is your app's own session." />
-
-      <H2>The reference pattern: a first-party JWT cookie</H2>
-      <CodeBlock
-        lang="go"
-        code={`token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
-    Sub: user.Sub, Name: user.Name, PreferredUsername: user.PreferredUsername,
-    RegisteredClaims: jwt.RegisteredClaims{
-        ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
-        IssuedAt:  jwt.NewNumericDate(time.Now()),
-        Issuer:    "your-app",
-    },
-})
-signed, _ := token.SignedString(jwtSecret)
-
-http.SetCookie(w, &http.Cookie{
-    Name:     "app_session",
-    Value:    signed,
-    Path:     "/",
-    HttpOnly: true,
-    Secure:   true, // true in production (HTTPS)
-    SameSite: http.SameSiteLaxMode,
-    MaxAge:   86400,
-})`}
-      />
-
-      <Table
-        head={["Cookie flag", "Why"]}
-        rows={[
-          ["HttpOnly", "Blocks JavaScript access — mitigates token theft via XSS."],
-          ["Secure", "Cookie is only sent over HTTPS. Set true in every deployed environment."],
-          ["SameSite=Lax", "Blocks the cookie on cross-site POSTs while still allowing the OAuth redirect back from NID."],
-          ["Short-lived temp cookies", "oauth_state and pkce_verifier expire in 600s — just long enough for the redirect round trip."],
-        ]}
-      />
-    </>
-  );
-}
-
-/* ---------- Integration Guides ---------- */
+/* ---------- Framework Guides ---------- */
 
 function GuideShell({
   title,
@@ -1365,7 +991,7 @@ function GuideShell({
 }) {
   return (
     <>
-      <SectionHeading eyebrow="Integration Guide" title={title} lead={lead} />
+      <SectionHeading eyebrow="Framework Guide" title={title} lead={lead} />
       {children}
     </>
   );
@@ -1373,335 +999,193 @@ function GuideShell({
 
 function GuideReact() {
   return (
-    <GuideShell
-      title="React"
-      lead="A single-page app talks only to your own backend — never directly to NID."
-    >
-      <H2>1. Redirect to sign-in</H2>
-      <CodeBlock lang="tsx" title="src/pages/Login.tsx" code={REACT_LOGIN_TSX} />
-      <H2>2. Read the session anywhere</H2>
-      <CodeBlock lang="tsx" title="src/hooks/useSession.ts" code={REACT_USE_SESSION} />
-      <Callout tone="info" title="credentials: 'include' is required">
-        Every fetch to your backend needs <code className="font-mono text-xs">credentials: "include"</code> so
-        the browser sends the <code className="font-mono text-xs">app_session</code> cookie. Also allow-list
-        your frontend origin with <code className="font-mono text-xs">Access-Control-Allow-Credentials: true</code> on
-        the backend.
-      </Callout>
+    <GuideShell title="React" lead="Vite, Create React App, or any React Router setup — the pattern from Quick start.">
+      <CodeBlock lang="tsx" title="src/main.tsx" code={PROVIDER_SETUP} />
+      <CodeBlock lang="tsx" title="src/pages/Login.tsx" code={LOGIN_PAGE} />
+      <CodeBlock lang="tsx" title="src/pages/Dashboard.tsx" code={DASHBOARD_PAGE} />
     </GuideShell>
   );
 }
 
 function GuideNextjs() {
   return (
-    <GuideShell
-      title="Next.js"
-      lead="Next.js can be the OAuth client itself using Route Handlers — no separate backend needed."
-    >
-      <H2>Route handlers</H2>
-      <CodeBlock lang="typescript" title="app/oauth/login/route.ts" code={NEXTJS_LOGIN_ROUTE} />
-      <CodeBlock lang="typescript" title="app/oauth/callback/route.ts" code={NEXTJS_CALLBACK_ROUTE} />
-      <H2>Reading the session in a Server Component</H2>
-      <CodeBlock
-        lang="typescript"
-        title="app/dashboard/page.tsx"
-        code={`import { cookies } from "next/headers";
-import { jwtVerify } from "jose";
+    <GuideShell title="Next.js" lead="NIDProvider needs the browser, so it lives in a Client Component boundary at the root of the App Router tree.">
+      <CodeBlock lang="tsx" title="app/providers.tsx + app/layout.tsx" code={NEXTJS_PROVIDER} />
+      <H2>Using useNID() in a page</H2>
+      <CodeBlock lang="tsx" title="app/dashboard/page.tsx" code={NEXTJS_PAGE} />
 
-export default async function Dashboard() {
-  const token = cookies().get("app_session")?.value;
-  if (!token) redirect("/login");
+      <Callout tone="warn" title="Client-side identity only">
+        Because this is a public-client, browser-driven flow, <code className="font-mono text-xs">useNID()</code>{" "}
+        only resolves in Client Components — a Server Component can't read the session
+        directly. If you need the identity during server rendering (not just after
+        hydration), that's a signal you actually want a backend-mediated flow instead of
+        the no-backend SDK.
+      </Callout>
 
-  const secret = new TextEncoder().encode(process.env.SESSION_JWT_SECRET!);
-  const { payload: user } = await jwtVerify(token, secret);
-
-  return <p>Welcome, {user.name as string}</p>;
-}`}
-      />
-    </GuideShell>
-  );
-}
-
-function GuideVue() {
-  return (
-    <GuideShell title="Vue" lead="Same pattern as React — redirect for login, credentialed fetch for session.">
-      <CodeBlock lang="vue" title="src/components/SignIn.vue" code={VUE_SNIPPET} />
+      <H2>Environment variables</H2>
+      <CodeBlock lang="bash" title=".env.local" code={`NEXT_PUBLIC_NID_CLIENT_ID=2X85wiHX94Sng0hJ2lZhfYEQe-164JM5
+NEXT_PUBLIC_NID_REDIRECT_URI=http://localhost:3000/callback`} />
+      <P><code className="font-mono text-xs">NEXT_PUBLIC_</code> vars are bundled into client JS by design — which is fine here, since a public client's <code className="font-mono text-xs">clientId</code> is meant to be visible.</P>
     </GuideShell>
   );
 }
 
 function GuideAngular() {
   return (
-    <GuideShell title="Angular" lead="Wrap the two calls in an injectable AuthService and consume it via DI.">
-      <CodeBlock lang="typescript" title="src/app/auth.service.ts" code={ANGULAR_SNIPPET} />
-      <Callout tone="info" title="withCredentials: true">
-        Angular's HttpClient needs <code className="font-mono text-xs">withCredentials: true</code> on every
-        call for the session cookie to be sent and accepted.
-      </Callout>
+    <GuideShell title="Angular" lead="provideNID() in your app config, NIDService injected wherever you need the session.">
+      <CodeBlock lang="typescript" title="src/app/app.config.ts" code={ANGULAR_MODULE} />
+      <CodeBlock lang="typescript" title="src/app/login/login.component.ts" code={ANGULAR_COMPONENT} />
+      <P><code className="font-mono text-xs">NIDService</code> exposes the same shape as <code className="font-mono text-xs">useNID()</code> — <code className="font-mono text-xs">user()</code>, <code className="font-mono text-xs">isAuthenticated()</code>, <code className="font-mono text-xs">isLoading()</code> as signals, plus <code className="font-mono text-xs">login()</code> and <code className="font-mono text-xs">logout()</code>.</P>
     </GuideShell>
   );
 }
 
-function GuideVanilla() {
+function GuideOther() {
   return (
-    <GuideShell title="Vanilla JavaScript" lead="No framework required — two fetch calls and a redirect.">
-      <CodeBlock lang="html" code={VANILLA_SNIPPET} />
+    <GuideShell title="Other frameworks" lead="Vue, Svelte, SolidJS, or no framework at all — drop to the framework-less core client.">
+      <CodeBlock lang="typescript" title="@nid/core" code={OTHER_FRAMEWORKS} />
+      <P><code className="font-mono text-xs">@nid/react</code> and <code className="font-mono text-xs">@nid/angular</code> are thin wrappers over <code className="font-mono text-xs">@nid/core</code> — the redirect, PKCE, and token handling logic is identical underneath.</P>
     </GuideShell>
   );
 }
 
-function GuideNode() {
-  return (
-    <GuideShell title="Node.js (Express)" lead="A direct port of the reference Go server's four endpoints.">
-      <CodeBlock lang="javascript" title="server.js" code={NODE_EXPRESS_SNIPPET} />
-    </GuideShell>
-  );
-}
+/* ---------- SDK Reference ---------- */
 
-function GuideGo() {
-  return (
-    <GuideShell title="Go" lead="The reference implementation this whole platform's docs are grounded in.">
-      <CodeBlock lang="go" title="cmd/server/main.go (excerpt)" code={GO_ANNOTATED} />
-      <Callout tone="success" title="Already production-shaped">
-        The reference server already separates temporary OAuth cookies from the
-        long-lived session cookie, validates state before touching the code, and
-        signs its own JWT rather than forwarding NID's tokens to the browser. Keep
-        that shape when you port it.
-      </Callout>
-    </GuideShell>
-  );
-}
-
-function GuidePython() {
-  return (
-    <GuideShell title="Python (FastAPI)" lead="Async endpoints mirroring the same four routes; Flask works the same with requests instead of httpx.">
-      <CodeBlock lang="python" title="main.py" code={PYTHON_FASTAPI_SNIPPET} />
-    </GuideShell>
-  );
-}
-
-function GuideJava() {
-  return (
-    <GuideShell title="Java (Spring Boot)" lead="A REST controller implementing login and callback; wire the exchange with RestTemplate or WebClient.">
-      <CodeBlock lang="java" title="OAuthController.java" code={JAVA_SPRING_SNIPPET} />
-    </GuideShell>
-  );
-}
-
-function GuidePhp() {
-  return (
-    <GuideShell title="PHP" lead="Session-based state storage instead of cookies, cURL for the token exchange.">
-      <CodeBlock lang="php" code={PHP_SNIPPET} />
-    </GuideShell>
-  );
-}
-
-/* ---------- API Reference ---------- */
-
-function ApiAuthorize() {
+function RefProvider() {
   return (
     <>
-      <SectionHeading eyebrow="API Reference" title={<><MethodBadge method="GET" /> <span className="ml-2 align-middle">/oauth/authorize</span></>} />
-      <P>Browser-facing endpoint. Your backend redirects here; it is never called with fetch/XHR.</P>
-      <Table
-        head={["Parameter", "Required", "Description"]}
-        rows={[
-          ["client_id", "yes", "Issued when you registered your application."],
-          ["redirect_uri", "yes", "Must exactly match a registered URI."],
-          ["response_type", "yes", "Always code."],
-          ["scope", "yes", "Space-delimited; include openid for identity claims."],
-          ["state", "yes", "Opaque CSRF token you generate and verify on return."],
-          ["code_challenge", "yes", "base64url(sha256(code_verifier))."],
-          ["code_challenge_method", "yes", "Always S256."],
-          ["nonce", "recommended", "Bound into the ID token to prevent replay."],
-        ]}
-      />
-      <H2>Redirect on success</H2>
-      <CodeBlock lang="text" code={`302 Found
-Location: https://api.yourapp.com/oauth/callback?code=abc123&state=xyz789`} />
-      <H2>Redirect on denial / error</H2>
-      <CodeBlock lang="text" code={`302 Found
-Location: https://api.yourapp.com/oauth/callback?error=access_denied&error_description=...`} />
+      <SectionHeading eyebrow="SDK Reference" title="<NIDProvider>" lead="Wraps your app once, at the root. Every useNID() call below it shares the same session." />
+      <Table head={["Prop", "Type", "Notes"]} rows={PROVIDER_PROPS_ROWS} />
+      <Callout tone="danger" title="No clientSecret prop exists">
+        If you're passing <code className="font-mono text-xs">clientSecret</code> to{" "}
+        <code className="font-mono text-xs">NIDProvider</code>, stop and re-register the
+        app as a public client — see{" "}
+        <code className="font-mono text-xs">Security → Never ship a client secret</code>.
+      </Callout>
     </>
   );
 }
 
-function ApiToken() {
+function RefUseNID() {
   return (
     <>
-      <SectionHeading eyebrow="API Reference" title={<><MethodBadge method="POST" /> <span className="ml-2 align-middle">/oauth/token</span></>} />
-      <P>Server-to-server only. Requires the client secret — never call this from a browser.</P>
+      <SectionHeading eyebrow="SDK Reference" title="useNID()" lead="The one hook you need — call it from any component under NIDProvider." />
+      <Table head={["Field", "Type", "Notes"]} rows={USENID_ROWS} />
+      <CodeBlock lang="tsx" code={`const { user, isAuthenticated, isLoading, login, logout } = useNID();`} />
+      <Callout tone="info" title="Always check isLoading before isAuthenticated">
+        On first mount the SDK is restoring (or exchanging) a session — treating a
+        false isAuthenticated as "logged out" before isLoading settles causes a
+        flash-redirect to your login page even for already-signed-in users.
+      </Callout>
+    </>
+  );
+}
+
+function RefLoginButton() {
+  return (
+    <>
+      <SectionHeading eyebrow="SDK Reference" title="<NIDLoginButton>" lead="A pre-wired button that calls login() on click — fully restyleable via props." />
+      <Table head={["Prop", "Type", "Notes"]} rows={LOGINBUTTON_ROWS} />
       <CodeBlock
-        lang="http"
-        code={`POST /oauth/token HTTP/1.1
-Content-Type: application/x-www-form-urlencoded
-
-grant_type=authorization_code
-&code=abc123
-&client_id=hZnNd0BdhkOkqgPGJRBoXdfaaaAkR2LS
-&client_secret=********
-&redirect_uri=https://api.yourapp.com/oauth/callback
-&code_verifier=<the original PKCE verifier>`}
+        lang="tsx"
+        code={`<NIDLoginButton
+  width="100%"
+  height="48px"
+  borderRadius="12px"
+  backgroundColor="#0f172a"
+  hoverBackgroundColor="#1e293b"
+  borderColor="rgba(6, 182, 212, 0.3)"
+  textColor="#e2e8f0"
+  fontSize="15px"
+  fontWeight={600}
+>
+  Sign in with NID
+</NIDLoginButton>`}
       />
-      <CodeBlock
-        lang="json"
-        title="200 OK"
-        code={`{
-  "access_token": "eyJhbGciOi...",
-  "token_type": "Bearer",
-  "expires_in": 3600,
-  "id_token": "eyJhbGciOi...",
-  "scope": "openid"
-}`}
-      />
-    </>
-  );
-}
-
-function ApiUserinfo() {
-  return (
-    <>
-      <SectionHeading eyebrow="API Reference" title={<><MethodBadge method="GET" /> <span className="ml-2 align-middle">/oauth/userinfo</span></>} />
-      <CodeBlock lang="http" code={`GET /oauth/userinfo HTTP/1.1
-Authorization: Bearer <access_token>`} />
-      <CodeBlock lang="json" title="200 OK" code={`{
-  "sub": "usr_9f21ac",
-  "name": "Ada Lovelace",
-  "preferred_username": "ada"
-}`} />
-      <P>A 401 here means the access token is expired or invalid — restart the flow from <code className="font-mono text-xs">/oauth/login</code> rather than retrying.</P>
-    </>
-  );
-}
-
-function ApiErrors() {
-  return (
-    <>
-      <SectionHeading eyebrow="API Reference" title="Errors" lead="Errors surface either as a redirect back to your callback (authorize step) or a JSON body (token step)." />
-      <Table
-        head={["Error", "Where", "Typical cause"]}
-        rows={[
-          ["access_denied", "callback redirect", "User declined consent."],
-          ["invalid_request", "callback redirect / token", "Missing or malformed required parameter."],
-          ["invalid_client", "token", "Wrong client_id/client_secret pair."],
-          ["invalid_grant", "token", "Code already used, expired, or code_verifier doesn't match the original challenge."],
-          ["redirect_uri_mismatch", "authorize", "redirect_uri doesn't exactly match a registered URI."],
-        ]}
-      />
-      <Callout tone="warn" title="Codes are single-use">
-        An authorization code is consumed on first exchange. A second attempt (e.g. a
-        double page load on the callback route) returns invalid_grant — guard the
-        callback handler against double-submission if your framework can trigger it.
-      </Callout>
+      <P>Prefer this over calling <code className="font-mono text-xs">login()</code> from a plain <code className="font-mono text-xs">{"<button>"}</code> only when you want the styling props above — functionally they're equivalent.</P>
     </>
   );
 }
 
 /* ---------- Security ---------- */
 
-function SecurityBestPractices() {
+function SecurityNoSecrets() {
   return (
     <>
-      <SectionHeading eyebrow="Security" title="Best practices" lead="What the reference implementation already does, and why." />
-      <ul className="mb-4 space-y-3">
-        {[
-          ["Always use PKCE", "Generate a fresh code_verifier per login attempt; never reuse one."],
-          ["Validate state before anything else", "Compare the callback's state to the cookie you set — reject on mismatch before touching the code."],
-          ["Short-lived temp cookies", "oauth_state and pkce_verifier should expire in minutes (600s in the reference), not hours."],
-          ["HttpOnly + Secure + SameSite=Lax on every auth cookie", "Blocks script access, forces HTTPS, and limits cross-site submission while still allowing the OAuth redirect."],
-          ["Never forward NID's tokens to the browser", "Consume access_token/id_token server-side; issue your own scoped session token."],
-          ["Verify the JWT signing method", "Explicitly check the alg on your session JWT (reject anything but HS256/your chosen algorithm) to avoid algorithm-confusion attacks."],
-          ["Lock CORS to known origins", "Allow-list exact frontend origins with credentials — never a wildcard alongside Allow-Credentials: true."],
-        ].map(([t, d]) => (
-          <li key={t} className="card-surface flex gap-3 p-4">
-            <span className="mt-0.5 text-success-400">✓</span>
-            <div>
-              <p className="text-sm font-semibold text-ink-100">{t}</p>
-              <p className="mt-0.5 text-sm text-ink-400">{d}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <SectionHeading eyebrow="Security" title="Never ship a client secret" lead="The single most important rule for this SDK." />
 
-      <H2>What the reference CORS middleware does</H2>
-      <CodeBlock
-        lang="go"
-        code={`var allowedOrigins = map[string]bool{
-    "https://app.yourapp.com": true,
-}
+      <P>
+        Anything that ends up in the JavaScript your app serves — including a value
+        passed as a prop to <code className="font-mono text-xs">NIDProvider</code> — is
+        readable by anyone who opens dev tools or views the page source. There is no
+        bundler setting, obfuscation trick, or environment-variable naming convention
+        that changes this. A value only stays secret if it never leaves a server you
+        control.
+      </P>
 
-func CORSMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        origin := r.Header.Get("Origin")
-        if allowedOrigins[origin] {
-            w.Header().Set("Access-Control-Allow-Origin", origin)
-            w.Header().Set("Access-Control-Allow-Credentials", "true")
-            w.Header().Set("Vary", "Origin")
-        }
-        next.ServeHTTP(w, r)
-    })
-}`}
+      <Callout tone="danger" title="If your console gave you a client secret for this app">
+        <>
+          That means the app was registered as a <strong>confidential</strong> client,
+          which is the wrong type for a browser-only SDK. Two options:
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            <li>Re-register (or ask an admin to re-register) the application as <strong>Public / SPA</strong> — you'll receive a <code className="font-mono text-xs">client_id</code> only.</li>
+            <li>If you specifically need the confidential-client flow, that means you need a backend to hold the secret — that's a different integration than this no-backend SDK.</li>
+          </ul>
+        </>
+      </Callout>
+
+      <H2>Correct vs. incorrect provider setup</H2>
+      <Table
+        head={["", "Example"]}
+        rows={[
+          ["Correct — public client", <code className="font-mono text-xs">{'<NIDProvider clientId="..." redirectUri="..." />'}</code>],
+          ["Incorrect — secret in browser code", <span className="text-danger-400"><code className="font-mono text-xs">{'<NIDProvider clientId="..." clientSecret="..." />'}</code> — extractable from any deployed build</span>],
+        ]}
       />
     </>
   );
 }
 
-function SecuritySecrets() {
+function SecurityRedirect() {
   return (
     <>
-      <SectionHeading eyebrow="Security" title="Secret management" lead="Two different secrets, two different blast radii if leaked." />
-      <Table
-        head={["Secret", "Compromise impact", "Rotation"]}
-        rows={[
-          ["NID_CLIENT_SECRET", "Attacker can exchange codes as your app — revoke and re-issue from the NID console immediately.", "Rotate on any suspected leak; otherwise on a routine schedule (e.g. every 90 days)."],
-          ["SESSION_JWT_SECRET", "Attacker can forge session cookies for any user — treat as a full account-takeover risk.", "Rotate immediately on leak. Rotating invalidates all active sessions — plan for a forced re-login."],
-        ]}
-      />
-      <Callout tone="danger" title="Placeholder secrets are not safe defaults">
-        A hardcoded fallback like <code className="font-mono text-xs">"change-this-to-a-very-long-random-secret-key-in-production"</code> should
-        fail startup if still present in a production environment, not silently run with it.
+      <SectionHeading eyebrow="Security" title="Redirect URI allow-list" lead="The one server-side check standing between an attacker and your users, for a public client." />
+      <P>
+        Because there's no secret, NID's only guarantee that a code is going to the right
+        place is the <code className="font-mono text-xs">redirect_uri</code> allow-list.
+        Register every environment's exact callback URL — scheme, host, port, and path —
+        and nothing broader.
+      </P>
+      <Callout tone="warn" title="Don't register a wildcard or a shared local URI across projects">
+        A loosely-matched redirect URI is the classic way a public client's authorization
+        code gets sent somewhere other than your app.
       </Callout>
-      <CodeBlock
-        lang="go"
-        code={`jwtSecret := []byte(os.Getenv("SESSION_JWT_SECRET"))
-if len(jwtSecret) < 32 {
-    log.Fatal("SESSION_JWT_SECRET must be set and at least 32 bytes")
-}`}
-      />
     </>
   );
 }
 
-/* ---------- Deployment ---------- */
-
-function DeployChecklist() {
+function SecurityLogout() {
   return (
     <>
-      <SectionHeading eyebrow="Deployment" title="Production checklist" lead="Everything that's safe to leave loose in local dev but must be tightened before launch." />
-      <Table
-        head={["Local dev", "Production"]}
-        rows={[
-          ["http://localhost URLs", "HTTPS everywhere — NID, your backend, your frontend."],
-          ["Cookie Secure: false", "Cookie Secure: true on every auth cookie."],
-          ["Hardcoded client ID/secret in source", "Loaded from env vars or a secret manager, never committed."],
-          ["Permissive CORS for quick testing", "Exact-origin allow-list, credentials enabled only for that list."],
-          ["Long-lived debug logging of tokens", "Never log access_token, id_token, or the session JWT — log the sub instead."],
-          ["Single instance, in-memory state cookies", "Stateless temp cookies (as in the reference) work fine across multiple instances — no shared session store needed for the OAuth handshake itself."],
-        ]}
+      <SectionHeading eyebrow="Security" title="Logout & multi-tab sessions" lead="logout() clears the local session — make sure every open tab notices." />
+      <CodeBlock
+        lang="tsx"
+        code={`const { logout } = useNID();
+
+const handleLogout = () => {
+  logout();
+  navigate("/login", { replace: true });
+};`}
       />
-      <H2>Cookie flags in production</H2>
-      <CodeBlock lang="go" code={`http.SetCookie(w, &http.Cookie{
-    Name:     "app_session",
-    Value:    signed,
-    Path:     "/",
-    HttpOnly: true,
-    Secure:   true,
-    SameSite: http.SameSiteLaxMode,
-    MaxAge:   86400,
-})`} />
-      <Callout tone="info" title="Health check">
-        Keep a plain <code className="font-mono text-xs">GET /health</code> route outside auth and CORS
-        restrictions for load balancer probes — the reference server already exposes one.
-      </Callout>
+      <P>
+        With <code className="font-mono text-xs">storage="memory"</code> (the default),
+        each tab holds its own session in memory, so a logout in one tab doesn't
+        automatically clear another already-open tab until it revalidates. If your app
+        needs immediate cross-tab logout, dispatch a{" "}
+        <code className="font-mono text-xs">BroadcastChannel</code> event alongside{" "}
+        <code className="font-mono text-xs">logout()</code> and call it from every open
+        tab's listener.
+      </P>
     </>
   );
 }
@@ -1715,11 +1199,11 @@ function Troubleshooting() {
       <Table
         head={["Symptom", "Likely cause", "Fix"]}
         rows={[
-          ["invalid OAuth state on callback", "Cookies blocked or SameSite too strict, or the request hit a different backend instance without the cookie.", "Confirm SameSite=Lax (not Strict), HTTPS in prod, and that /oauth/login and /oauth/callback share a cookie domain."],
-          ["redirect_uri_mismatch from NID", "Registered URI doesn't exactly match what your server sends.", "Compare byte-for-byte, including trailing slashes and port."],
-          ["/api/me always returns 401", "app_session cookie not sent — usually a CORS/credentials issue.", "Ensure fetch uses credentials: 'include' and the backend sets Access-Control-Allow-Credentials: true for that exact origin."],
-          ["invalid_grant on token exchange", "Code reused, expired, or code_verifier doesn't match the original code_challenge.", "Regenerate the flow from /oauth/login; don't retry a stale code."],
-          ["Works locally, fails in production", "Usually Secure: true cookies over plain HTTP, or an origin not in the CORS allow-list.", "Serve everything over HTTPS and add the production origin explicitly."],
+          ["isAuthenticated flips to false on every reload", "storage is set to memory and the silent session check is failing.", "Check that redirectUri exactly matches a registered URI, and that third-party cookies/storage aren't blocked for the NID domain."],
+          ["Stuck on isLoading forever", "Callback route never mounted, or redirectUri points somewhere the SDK isn't listening.", "Confirm the redirect URL in the console matches a real route rendering NIDProvider's tree."],
+          ["redirect_uri_mismatch from NID", "Registered URI doesn't exactly match what the SDK sends.", "Compare byte-for-byte, including trailing slashes and port, per environment."],
+          ["Console issued a client secret", "App was registered as Confidential instead of Public/SPA.", "Re-register as Public — see Security → Never ship a client secret."],
+          ["user is null right after login() resolves", "Reading user before isLoading has settled.", "Always branch on isLoading first, then isAuthenticated, before reading user."],
         ]}
       />
     </>
